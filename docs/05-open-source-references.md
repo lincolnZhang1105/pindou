@@ -124,7 +124,7 @@
 | nlohmann/json | 3.12.0 | MIT | core | 2026-10-27 | 待做：许可页保留版权声明（阶段 1） |
 | stb_image / stb_image_write（nothings/stb @003501f6） | — | MIT 或 Public Domain（取 MIT） | **只在** core/cli（桌面和真机测速 CLI 解码图片），不进 App | 2026-10-27 | CLI 不分发 |
 | libwebp | 1.6.0 | BSD-3-Clause | **只在** core/cli（解码 WebP），不进 App | 2026-10-27 | CLI 不分发 |
-| ONNX Runtime 官方预编译包（win-x64 / linux-x64 / osx-arm64） | 1.31.1 | MIT | core/src/nn（只用于桌面 benchmark 和 CI，不分发；App 用 `--no_telemetry` 定制构建，阶段 1） | 2026-10-28 | 不分发；App 构建时附 `ThirdPartyNotices.txt` |
+| ONNX Runtime 官方预编译包（win-x64 / linux-x64 / osx-arm64，以及 Android AAR 里的 arm64 动态库：只用于 T0.14 真机测速） | 1.31.1 | MIT | core/src/nn（只用于桌面 benchmark 和 CI，不分发；App 用 `--no_telemetry` 定制构建，阶段 1） | 2026-10-28 | 不分发；App 构建时附 `ThirdPartyNotices.txt` |
 | maxcleme/beadcolors 色卡数据 @f97ff428 | — | MIT | palettes（12 套国际色卡，不含 MARD） | 2026-10-27 | 待做：许可页注明数据出处（05 §5） |
 | bench 离线依赖：numpy、pillow、pyyaml、scipy、opencv-python-headless、colour-science、pytest | 见 `bench/requirements.txt` | BSD / MIT / HPND / Apache-2.0 | bench/、training/（不打包） | 2026-10-27 | 不分发 |
 | wakelock_plus、flutter_local_notifications、drift、riverpod、pdf、sentry_flutter、fluwx（微信支付）、支付宝插件 | 待定 | **引入时读 LICENSE 原文核实** | app | | |

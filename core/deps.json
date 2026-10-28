@@ -65,6 +65,12 @@
           "url": "https://github.com/microsoft/onnxruntime/releases/download/v1.31.1/onnxruntime-osx-arm64-1.31.1.tgz",
           "sha256": "2e1344a1926ee50eb25b38153cb6992c3567515aef0e677a1a520a1798896d6f",
           "version": "1.31.1"
+        },
+        "android-arm64-v8a": {
+          "url": "https://repo1.maven.org/maven2/com/microsoft/onnxruntime/onnxruntime-android/1.31.1/onnxruntime-android-1.31.1.aar",
+          "sha256": "d4d50660300ed2c4f38ffdfd5ab5bfa3a22f995f282dda24f42ea3ea55467b49",
+          "note": "官方 Android 包（默认带遥测），只用于 T0.14 真机测速；App 必须换成 --no_telemetry 的定制构建",
+          "version": "1.31.1"
         }
       }
     }

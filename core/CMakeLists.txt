@@ -41,19 +41,27 @@ endif()
 message(STATUS "beadcore: BC_PLATFORM=${BC_PLATFORM} BC_DEPS_DIR=${BC_DEPS_DIR}")
 
 set(OpenCV_STATIC ON)  # fetch_deps.py 只编静态库
+# Android 安装布局是 sdk/native/jni/；NDK 工具链默认只在 sysroot 里找包，所以要 NO_CMAKE_FIND_ROOT_PATH
 find_package(OpenCV 4 REQUIRED COMPONENTS core imgproc
-  HINTS "${BC_DEPS_DIR}/${BC_PLATFORM}/opencv")
+  HINTS "${BC_DEPS_DIR}/${BC_PLATFORM}/opencv" "${BC_DEPS_DIR}/${BC_PLATFORM}/opencv/sdk/native/jni"
+  NO_CMAKE_FIND_ROOT_PATH)
 message(STATUS "beadcore: OpenCV ${OpenCV_VERSION} from ${OpenCV_DIR}")
 
 # ONNX Runtime（端侧推理，03 §1）。桌面用官方预编译包；App 必须用 --no_telemetry 的定制构建（官方包默认开启遥测）
 option(BC_WITH_ORT "链接 ONNX Runtime（关闭时只走颜色路径）" ON)
 set(BC_ORT_DIR "${BC_DEPS_DIR}/${BC_PLATFORM}/onnxruntime" CACHE PATH "ONNX Runtime 目录（含 include/ 和 lib/）")
 if(BC_WITH_ORT)
-  if(NOT EXISTS "${BC_ORT_DIR}/include/onnxruntime_cxx_api.h")
+  if(NOT EXISTS "${BC_ORT_DIR}/include/onnxruntime_cxx_api.h" AND NOT EXISTS "${BC_ORT_DIR}/headers/onnxruntime_cxx_api.h")
     message(FATAL_ERROR "找不到 ONNX Runtime：${BC_ORT_DIR}（运行 python core/scripts/fetch_deps.py，或 -DBC_WITH_ORT=OFF）")
   endif()
   add_library(bc_onnxruntime SHARED IMPORTED)
-  if(WIN32)
+  if(ANDROID)
+    # 官方 AAR 的布局：headers/ 和 jni/<abi>/libonnxruntime.so
+    set_target_properties(bc_onnxruntime PROPERTIES
+      IMPORTED_LOCATION "${BC_ORT_DIR}/jni/${ANDROID_ABI}/libonnxruntime.so"
+      IMPORTED_NO_SONAME TRUE)
+    set(_ort_include "${BC_ORT_DIR}/headers")
+  elseif(WIN32)
     set_target_properties(bc_onnxruntime PROPERTIES
       IMPORTED_LOCATION "${BC_ORT_DIR}/lib/onnxruntime.dll"
       IMPORTED_IMPLIB "${BC_ORT_DIR}/lib/onnxruntime.lib")
@@ -64,7 +72,10 @@ if(BC_WITH_ORT)
   else()
     set_target_properties(bc_onnxruntime PROPERTIES IMPORTED_LOCATION "${BC_ORT_DIR}/lib/libonnxruntime.so")
   endif()
-  set_target_properties(bc_onnxruntime PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${BC_ORT_DIR}/include")
+  if(NOT _ort_include)
+    set(_ort_include "${BC_ORT_DIR}/include")
+  endif()
+  set_target_properties(bc_onnxruntime PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${_ort_include}")
 endif()
 
 set(BC_THIRD_PARTY_INCLUDE "${BC_DEPS_DIR}/src/include")

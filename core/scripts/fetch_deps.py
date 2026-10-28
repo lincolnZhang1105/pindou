@@ -118,10 +118,10 @@ def extract(archive: Path, dest: Path) -> None:
     if staging.exists():
         shutil.rmtree(staging)
     staging.mkdir(parents=True)
-    if archive.name.endswith((".tar.gz", ".tgz")):
+    if archive.name.endswith((".tar.gz", ".tgz", ".tar.xz")):
         with tarfile.open(archive) as t:
             t.extractall(staging, filter="data")
-    elif archive.name.endswith(".zip"):
+    elif archive.name.endswith((".zip", ".aar")):
         with zipfile.ZipFile(archive) as z:
             z.extractall(staging)
     else:

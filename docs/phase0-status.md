@@ -26,7 +26,7 @@
 | T0.11 模型 | ✅ 基本完成 | 一个 CRNN + CTC（40 万参数、1.6 MB）同时读图例色号、颗数、坐标和格内色号，只用合成数据训练（第三版 `ocr_v3`）。合成验证集：色号 99.8%、颗数 99.3%、坐标 87%、格内色号 91%。C++（ONNX Runtime）与 PyTorch 输出误差 < 1e-3（有单测）。和 07 的原设计不同：格内色号没有单独做 CNN 分类器，而是复用同一个模型在图例色号里做封闭词表打分，见 03 §1 |
 | T0.12 beadcore v1 | 🔄 进行中 | 已有：OCR 读图例色号和颗数、按色号集合判断品牌（B8）、图例核对（B5）、颗数约束求解、坐标数字定范围、格内文字证据（只读颜色拿不准的格子）、拼图识别（`needs_user_crop`）、看不见色块的白豆条目、分页拼接（B9：按坐标定位，读不出时按版式猜）。还缺：不确定格的置信度标定（要等真实 dev 集）；合成分页图上只有 9/30 拼对 |
 | T0.13 go/no-go 报告 | ⏳ | 依赖 T0.5b、T0.9、T0.12 |
-| T0.14 真机测速 | ⏳ 等设备 | 要一台中端安卓机；Android arm64 CLI 由 AI 编译 |
+| T0.14 真机测速 | ⏳ 等设备 | 工具已就绪：`tools/build-android.sh` 交叉编译 arm64 版 CLI（OpenCV 关闭 ARM 加速库以保证结果和桌面一致），`tools/make_bench_image.py` 生成 104×104 标准测速图，`tools/android-bench.sh` 用 adb 推送并测速、结果写入 `build/android-bench.md`。手机插上、打开 USB 调试即可测。桌面端同一张图约 130 ms |
 
 ## 3. 当前数字（只作开发参考，不是 go/no-go 结论）
 
@@ -53,8 +53,18 @@
 
 ## 5. AI 接下来要做的（不受阻塞）
 
-- OCR 第二版训练完成后，在合成集上复测，再决定是否继续加训练数据。
-- T0.12 余下部分：分页拼接（B9）、格内色号证据、不确定格的置信度标定（召回 ≥ 80% 的门槛要用 dev 集标定）。
-- T0.8：用无头浏览器驱动 Pindo，跑颜色路径的 baseline。
-- T0.14：编译 Android arm64 的 CLI 和测速脚本（等设备到位再实测）。
+- T0.8：在 bench 里把 Pindo 作为外部 Node 进程运行（不复制它的代码），跑颜色路径的 baseline。
+- T0.12 余下部分：不确定格的置信度标定（召回 ≥ 80% 的门槛要用 dev 集标定，等真实数据）；合成分页图每页少一行或一列的问题。
 - 大图和模糊图的网格检测：合成集上剩下的主要失败类型。
+
+## 6. 真机测速怎么跑（T0.14）
+
+1. 编译（Linux 或 WSL）：`tools/build-android.sh`。第一次运行会下载 Android NDK r27c，产物是 `~/pindou-build/android-arm64/beadcore-cli-stripped`。
+2. 手机打开「开发者选项 → USB 调试」，用数据线连上电脑，确认 `adb devices` 能看到设备。
+3. 在 Git Bash 里运行（WSL 用户名按本机调整）：
+
+```bash
+tools/android-bench.sh //wsl.localhost/Ubuntu-24.04/home/dministrator/pindou-build/android-arm64/beadcore-cli-stripped //wsl.localhost/Ubuntu-24.04/home/dministrator/pindou-deps/android-arm64-v8a/onnxruntime/jni/arm64-v8a/libonnxruntime.so
+```
+
+结果追加到 `build/android-bench.md`。门槛是中端机识别 104×104 ≤ 3 秒（04 §0.1 第 5 条）。
