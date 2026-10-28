@@ -207,7 +207,7 @@
 | 豆猫 | 高亮功能做得好 | 永久会员 ¥38.8 |
 | 豆门 | 端侧 AI 识别，只有 iOS 版 | 免费 |
 | 颂拼豆 | 完全免费 | 免费 |
-| **LunarXuan/Pindo**（开源 baseline） | GPL-3.0。**只能作为外部进程运行**，不能复制进我们的代码。⚠️ 核实（2026-10-27）：它的识别功能只针对**不带色号**的图纸（README：Recognize unlabeled charts），而且是 Next.js 静态网页，没有命令行入口，要用无头浏览器驱动。对 T1（带色号）图纸它只能当颜色路径的 baseline，偏弱 | 本地运行（无头浏览器） |
+| **LunarXuan/Pindo**（开源 baseline） | GPL-3.0。**只能作为外部进程运行**，不能复制进我们的代码。⚠️ 核实（2026-10-27）：它的识别功能只针对**不带色号**的图纸（README：Recognize unlabeled charts），而且是 Next.js 静态网页，没有命令行入口。对 T1（带色号）图纸它只能当颜色路径的 baseline，偏弱。实现（2026-10-28）：识别模块是纯 TypeScript，用 esbuild 单独打包、@napi-rs/canvas 补上浏览器的读图接口，作为 Node 进程运行，不需要无头浏览器；和 Chrome 里的运行结果逐格一致。合成集评不了它的颜色路径（合成图纸的格子颜色不是真实品牌色值），见 `bench/competitors/pindo/README.md` | 本地运行（Node 进程，`python -m bench.competitors.pindo`） |
 
 会员费合计约 ¥200–300，由产品负责人购买。
 

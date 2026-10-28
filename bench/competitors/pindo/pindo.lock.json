@@ -1,0 +1,9 @@
+{
+  "repo": "LunarXuan/Pindo",
+  "license": "GPL-3.0-only",
+  "commit": "4ae361383a1912eac843a1ea4ed44298ca6cd660",
+  "committed_at": "2026-09-04T13:15:40Z",
+  "url": "https://codeload.github.com/LunarXuan/Pindo/tar.gz/4ae361383a1912eac843a1ea4ed44298ca6cd660",
+  "sha256": "cd997d95a8dc2bf5bd15ac24c886dc75cb1c811cde2f12dbb5c3e4d372b75fe8",
+  "note": "2026-10-28 核实为 main 分支最新提交。源码只下载到 .work/（gitignore），不进仓库、不分发"
+}

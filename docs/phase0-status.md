@@ -20,7 +20,7 @@
 | T0.5a/b 标注 dev 40、test 80 | ⏳ 等 LBL | |
 | T0.6 合成数据 | ✅ | `bench/synth`：6 种渲染风格、T1–T7 全覆盖、可复现 |
 | T0.7 评测器 | ✅ | `bench/eval`：04 §3 的全部指标、配对 bootstrap、dev 门禁、test 集使用纪律，80 个用例。对 04 歧义定义的 12 条解释已写进 04 §3.1 |
-| T0.8 Pindo baseline | ⏳ 未开始 | Pindo 只识别**不带色号**的图纸，而且没有命令行入口（要用无头浏览器驱动），见 04 §4.1 |
+| T0.8 Pindo baseline | ✅ 工具完成，⏳ 等 dev 集 | `python -m bench.competitors.pindo`：Pindo（GPL）源码按锁文件下载到本地、不进仓库，打包后作为 Node 进程运行，和 Chrome 里的结果逐格一致。合成集上网格正确 0/39（按真值裁到网格区域后 5/39）：它把坐标栏和图例也算进网格。合成集评不了它的颜色路径，**正式 baseline 报告要等 T0.5b 的 dev / test 集**。见 `bench/competitors/pindo/README.md` |
 | T0.9 竞品 Tier A | ⏳ 等 PO | 要买竞品会员（约 ¥200–300）；Android 自动化脚本由 AI 写 |
 | T0.10 beadcore v0 | ✅ | 网格检测、图例色块、颜色分类、求解 |
 | T0.11 模型 | ✅ 基本完成 | 一个 CRNN + CTC（40 万参数、1.6 MB）同时读图例色号、颗数、坐标和格内色号，只用合成数据训练（第三版 `ocr_v3`）。合成验证集：色号 99.8%、颗数 99.3%、坐标 87%、格内色号 91%。C++（ONNX Runtime）与 PyTorch 输出误差 < 1e-3（有单测）。和 07 的原设计不同：格内色号没有单独做 CNN 分类器，而是复用同一个模型在图例色号里做封闭词表打分，见 03 §1 |
@@ -53,7 +53,7 @@
 
 ## 5. AI 接下来要做的（不受阻塞）
 
-- T0.8：在 bench 里把 Pindo 作为外部 Node 进程运行（不复制它的代码），跑颜色路径的 baseline。
+- T0.8：dev 集标好后跑 `python -m bench.competitors.pindo run --split dev --run pindo-4ae3613 --white-as-empty` 并出报告；test 集只在 W2 跑一次。
 - T0.12 余下部分：不确定格的置信度标定（召回 ≥ 80% 的门槛要用 dev 集标定，等真实数据）；合成分页图每页少一行或一列的问题。
 - 大图和模糊图的网格检测：合成集上剩下的主要失败类型。
 

@@ -43,3 +43,7 @@ __pycache__/
 
 # 本地编译和训练日志
 /*.log
+
+# T0.8 Pindo baseline：npm 依赖、下载的 Pindo 源码（GPL-3.0）和打包产物都只在本地，不进 git
+/bench/competitors/pindo/node_modules/
+/bench/competitors/pindo/.work/

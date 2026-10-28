@@ -127,6 +127,8 @@
 | ONNX Runtime 官方预编译包（win-x64 / linux-x64 / osx-arm64，以及 Android AAR 里的 arm64 动态库：只用于 T0.14 真机测速） | 1.31.1 | MIT | core/src/nn（只用于桌面 benchmark 和 CI，不分发；App 用 `--no_telemetry` 定制构建，阶段 1） | 2026-10-28 | 不分发；App 构建时附 `ThirdPartyNotices.txt` |
 | maxcleme/beadcolors 色卡数据 @f97ff428 | — | MIT | palettes（12 套国际色卡，不含 MARD） | 2026-10-27 | 待做：许可页注明数据出处（05 §5） |
 | bench 离线依赖：numpy、pillow、pyyaml、scipy、opencv-python-headless、colour-science、pytest | 见 `bench/requirements.txt` | BSD / MIT / HPND / Apache-2.0 | bench/、training/（不打包） | 2026-10-27 | 不分发 |
+| T0.8 Pindo baseline 的 npm 依赖：esbuild、@napi-rs/canvas（内含 Skia，BSD-3-Clause） | 0.28.2、1.0.13 | MIT | **只在** bench/competitors/pindo（装在 gitignore 的 `node_modules/`，不打包） | 2026-10-28 | 不分发 |
+| LunarXuan/Pindo 源码 @4ae36138（**红线项目，只作外部进程运行**） | — | GPL-3.0 | **只在** bench/competitors/pindo：按锁文件下载到 gitignore 的 `.work/`，不修改、不复制、不分发；仓库里只有自己写的胶水代码 | 2026-10-28 | 不分发，无需履行；不得进入 app/、core/、palettes/、backend/ |
 | wakelock_plus、flutter_local_notifications、drift、riverpod、pdf、sentry_flutter、fluwx（微信支付）、支付宝插件 | 待定 | **引入时读 LICENSE 原文核实** | app | | |
 | zwhy149/bead-grid-studio（移植进 `core/src/quant`） | 待定 | Apache-2.0 | core | | 保留 LICENSE 和 NOTICE、标注改动、不使用其名称和 logo |
 

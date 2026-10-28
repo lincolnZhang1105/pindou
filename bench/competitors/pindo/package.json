@@ -1,0 +1,11 @@
+{
+  "name": "pindou-bench-pindo-harness",
+  "private": true,
+  "description": "T0.8：把 LunarXuan/Pindo 的识别模块作为外部 Node 进程运行（Pindo 源码不进仓库）",
+  "type": "module",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@napi-rs/canvas": "1.0.13",
+    "esbuild": "0.28.2"
+  }
+}

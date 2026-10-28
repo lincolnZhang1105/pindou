@@ -17,7 +17,7 @@
 | `label/` | 真值标注工具（本地网页） | T0.4 |
 | `synth/` | 合成数据生成器 | T0.6 |
 | `eval/` | 评测器、质量门禁、`config.yaml`（θ、τ、标记率上限等参数） | T0.7 |
-| `competitors/` | 竞品结果的录入和 adb 自动化 | T0.8、T0.9 |
+| `competitors/` | 竞品结果的录入和 adb 自动化；`competitors/pindo/`：Pindo baseline（外部 Node 进程，见其 README） | T0.8、T0.9 |
 | `engine/` | 用 beadcore-cli 批量跑识别，写 `preds/<run>/` | T0.8、T0.10、T0.12 |
 | `datasets/` | **只放 manifest 和划分清单**，不放图片 | T0.3、T0.5 |
 | `palettes_unverified/` | 来源存疑、只供 bench 内部使用的色卡（见 `palettes/SOURCES.md`） | T0.2 |
