@@ -32,7 +32,9 @@ def make_image() -> np.ndarray:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--model", type=Path)
+    ap.add_argument("--model", type=Path, help="ONNX 模型（用 onnxruntime 求参考输出）")
+    ap.add_argument("--checkpoint", type=Path, help="PyTorch 检查点（用 PyTorch 求参考输出，T0.11 的对拍口径）")
+    ap.add_argument("--onnx-name", default="", help="写进 golden 的模型名，C++ 测试按它找 core/models/<name>.onnx")
     a = ap.parse_args()
     img = make_image()
     # 框高 10 → pad 1.5（五成双取 2），框高 30 → 4.5（取 4）；宽高比造成的 .5 也覆盖到
@@ -40,20 +42,33 @@ def main() -> None:
              (150, 90, 49, 29), (60, 15, 21, 8)]
     items = []
     sess = None
+    torch_model = None
     if a.model:
         import onnxruntime as ort
         sess = ort.InferenceSession(str(a.model), providers=["CPUExecutionProvider"])
+    if a.checkpoint:
+        import torch
+        from training.ocr.model import CRNN
+        torch_model = CRNN()
+        torch_model.load_state_dict(torch.load(a.checkpoint, map_location="cpu")["model"])
+        torch_model.eval()
     for b in boxes:
         crop = ink_crop(img, b)
         it = {"box": list(b), "w": int(crop.shape[1]), "crop": [round(float(v), 7) for v in crop.ravel()]}
-        if sess is not None:
-            out = sess.run(None, {"x": crop[None, None].astype(np.float32)})[0]
+        if sess is not None or torch_model is not None:
+            if torch_model is not None:
+                import torch
+                with torch.no_grad():
+                    out = torch_model(torch.from_numpy(crop[None, None].astype(np.float32))).numpy()
+            else:
+                out = sess.run(None, {"x": crop[None, None].astype(np.float32)})[0]
             it["logp_shape"] = list(out.shape)
             it["logp"] = [round(float(v), 6) for v in out.ravel()]
         items.append(it)
-    OUT.write_text(json.dumps({"image_shape": list(img.shape), "image": img.ravel().tolist(), "items": items}) + "\n",
+    OUT.write_text(json.dumps({"image_shape": list(img.shape), "image": img.ravel().tolist(), "model": a.onnx_name,
+                               "items": items}) + "\n",
                    encoding="utf-8")
-    print(f"写入 {OUT}（{len(items)} 个框{'，含模型输出' if sess else ''}）")
+    print(f"写入 {OUT}（{len(items)} 个框{'，含模型输出' if (sess or torch_model) else ''}）")
 
 
 if __name__ == "__main__":

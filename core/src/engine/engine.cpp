@@ -52,8 +52,10 @@ struct PageResult {
   LegendResult legend;
   color::RGB8 page_bg{};
   int col_offset = 0, row_offset = 0;
-  int cols() const { return static_cast<int>(xs.size()) - 1; }
-  int rows() const { return static_cast<int>(ys.size()) - 1; }
+  int abs_col0 = 0, abs_row0 = 0;  // 坐标数字给出的第一列 / 第一行的编号（从 1 开始；0 表示不知道）
+  bool legend_only = false;         // 多图输入里只有图例、没有网格的那张
+  int cols() const { return std::max(0, static_cast<int>(xs.size()) - 1); }
+  int rows() const { return std::max(0, static_cast<int>(ys.size()) - 1); }
 };
 
 cv::Rect lines_bbox(const std::vector<double>& xs, const std::vector<double>& ys) {
@@ -215,7 +217,12 @@ ojson recognize(const Context& ctx, const RecognizeRequest& req, const Progress&
                             {"comb_debug", pr.grid.comb_debug}};
       }
       if (!pr.grid.found) {
-        fail(BC_ERR_NO_GRID_FOUND, "第 " + std::to_string(i + 1) + " 张图没有找到网格：" + pr.grid.fail_reason);
+        // 多图输入时，没有网格的那张可能只是图例页（分页图常把图例单独放一张）
+        if (n_img == 1) fail(BC_ERR_NO_GRID_FOUND, "没有找到网格：" + pr.grid.fail_reason);
+        pr.legend_only = true;
+        pr.exclude = cv::Rect();
+        pages.push_back(std::move(pr));
+        continue;
       }
       // 多个大小相近的网格块：多图合集（T7），需要用户框选
       const auto& comps = pr.grid.components;
@@ -224,7 +231,8 @@ ojson recognize(const Context& ctx, const RecognizeRequest& req, const Progress&
         for (const auto& c : comps) cj.push_back({c.x, c.y, c.width, c.height});
         debug["grid"][i]["components"] = cj;
       }
-      if (comps.size() >= 2 && comps[1].area() >= 0.4 * comps[0].area()) {
+      // 多图输入（分页图）时每一张都是用户给的一页，不做拼图判断
+      if (n_img == 1 && comps.size() >= 2 && comps[1].area() >= 0.4 * comps[0].area()) {
         if (!g_debug) fail(BC_ERR_NEEDS_USER_CROP, "图里有多个独立的网格，请框选其中一个图案");
         warnings.push_back("debug_multi_component");
       }
@@ -269,12 +277,16 @@ ojson recognize(const Context& ctx, const RecognizeRequest& req, const Progress&
           };
           adopt(cr.cols, c0, c1, static_cast<int>(lx.size()), cr.cols_with_word);
           adopt(cr.rows, r0, r1, static_cast<int>(ly.size()), cr.rows_with_word);
+          // 分页图拼接用：这一页第一列 / 第一行的坐标编号
+          if (cr.cols.ok && c0 - cr.cols.k >= 1) pr.abs_col0 = c0 - cr.cols.k;
+          if (cr.rows.ok && r0 - cr.rows.k >= 1) pr.abs_row0 = r0 - cr.rows.k;
           pr.xs.assign(lx.begin() + c0, lx.begin() + c1 + 2);
           pr.ys.assign(ly.begin() + r0, ly.begin() + r1 + 2);
           if (g_debug) {
             debug["grid"][i]["coords"] = {{"cols", {cr.cols.ok, cr.cols.first, cr.cols.last, cr.cols.support, cr.cols.dense}},
                                           {"rows", {cr.rows.ok, cr.rows.first, cr.rows.last, cr.rows.support, cr.rows.dense}},
-                                          {"label_rows", cr.label_rows}, {"label_cols", cr.label_cols}};
+                                          {"label_rows", cr.label_rows}, {"label_cols", cr.label_cols},
+                                          {"words", cr.debug}};
           }
         }
       }
@@ -283,7 +295,7 @@ ojson recognize(const Context& ctx, const RecognizeRequest& req, const Progress&
         const cv::Mat& rgb = rgbs[i];
         const cv::Rect gb = lines_bbox(pr.xs, pr.ys) & cv::Rect(0, 0, rgb.cols, rgb.rows);
         const double grid_frac = double(gb.area()) / (double(rgb.cols) * rgb.rows);
-        if (grid_frac < 0.15) {
+        if (grid_frac < 0.15 && n_img == 1) {
           const color::RGB8 bg = estimate_page_background(rgb);
           const double pitch = std::max(pr.grid.pitch_x, pr.grid.pitch_y);
           const int pad = static_cast<int>(std::ceil(3 * pitch));
@@ -311,20 +323,99 @@ ojson recognize(const Context& ctx, const RecognizeRequest& req, const Progress&
   }
   timing["grid"] = std::lround(ms_since(t));
 
-  // 多页：v0 先按输入顺序横向排开（行数一致时），否则纵向；B9 的坐标拼接在 v1 实现
-  if (!req.pages && pages.size() > 1) {
-    const bool same_rows = std::all_of(pages.begin(), pages.end(), [&](const PageResult& p) { return p.rows() == pages[0].rows(); });
-    int off = 0;
-    for (auto& p : pages) {
-      if (same_rows) {
-        p.col_offset = off;
-        off += p.cols();
-      } else {
-        p.row_offset = off;
-        off += p.rows();
+  // 多页（B9）：网格页排在前面，图例页放后面
+  std::stable_partition(pages.begin(), pages.end(), [](const PageResult& p) { return !p.legend_only; });
+  require(!pages.empty() && !pages.front().legend_only, BC_ERR_NO_GRID_FOUND, "所有图片都没有找到网格");
+  const int n_grid = static_cast<int>(std::count_if(pages.begin(), pages.end(), [](const PageResult& p) { return !p.legend_only; }));
+  if (!req.pages && n_grid > 1) {
+    // 1) 每页都读出了坐标：按坐标编号直接定位（相邻页重复的边界行列会落在同一位置）
+    bool by_coords = true;
+    int min_c = 1 << 30, min_r = 1 << 30;
+    for (int k = 0; k < n_grid; ++k) {
+      by_coords &= pages[k].abs_col0 > 0 && pages[k].abs_row0 > 0;
+      min_c = std::min(min_c, pages[k].abs_col0);
+      min_r = std::min(min_r, pages[k].abs_row0);
+    }
+    if (by_coords) {
+      // 两页落在同一个位置说明坐标读错了，退回按版式猜
+      for (int a = 0; a < n_grid && by_coords; ++a) {
+        for (int b = a + 1; b < n_grid; ++b) {
+          if (pages[a].abs_col0 == pages[b].abs_col0 && pages[a].abs_row0 == pages[b].abs_row0) by_coords = false;
+        }
       }
     }
-    warnings.push_back("pages_order_unverified");
+    if (by_coords) {
+      for (int k = 0; k < n_grid; ++k) {
+        pages[k].col_offset = pages[k].abs_col0 - min_c;
+        pages[k].row_offset = pages[k].abs_row0 - min_r;
+      }
+    } else {
+      // 2) 按版式猜：张数是平方数按 s×s 排（九宫格）；行数都相同排成一行；列数都相同排成一列；否则按 ⌈√n⌉ 列排
+      int per_row = n_grid;
+      const int s = static_cast<int>(std::lround(std::sqrt(double(n_grid))));
+      const bool same_rows = std::all_of(pages.begin(), pages.begin() + n_grid, [&](const PageResult& p) { return p.rows() == pages[0].rows(); });
+      const bool same_cols = std::all_of(pages.begin(), pages.begin() + n_grid, [&](const PageResult& p) { return p.cols() == pages[0].cols(); });
+      // 按板切的分页：一行里除了最后一张都一样宽，最后一张是剩下的边角、明显更窄
+      int maxc = 0, board_break = 0;
+      for (int k = 0; k < n_grid; ++k) maxc = std::max(maxc, pages[k].cols());
+      for (int k = 0; k + 1 < n_grid; ++k) {
+        if (pages[k].cols() < maxc - 1) {
+          board_break = k + 1;
+          break;
+        }
+      }
+      // 部分页读出了列坐标：列坐标「回到最小值」的那一页是新一行的开头（比如 1、44、87、1、44、87 → 每行 3 张）
+      int coord_break = 0;
+      {
+        int min_known = 1 << 30;
+        for (int k = 0; k < n_grid; ++k) {
+          const int a = pages[k].abs_col0;
+          if (a <= 0) continue;
+          if (k > 0 && min_known < (1 << 30) && a <= min_known) {
+            coord_break = k;
+            break;
+          }
+          min_known = std::min(min_known, a);
+        }
+      }
+      if (coord_break > 0) {
+        per_row = coord_break;
+      } else if (board_break > 1) {
+        per_row = board_break;
+      } else if (s * s == n_grid) {
+        per_row = s;
+      } else if (same_rows) {
+        per_row = n_grid;
+      } else if (same_cols) {
+        per_row = 1;
+      } else {
+        per_row = static_cast<int>(std::ceil(std::sqrt(double(n_grid))));
+      }
+      // 已经读出坐标的页按坐标放（以同一行 / 同一列里读出了坐标的页为基准），其余按累加补位
+      int known_c = 1 << 30, known_r = 1 << 30;
+      for (int k = 0; k < n_grid; ++k) {
+        if (pages[k].abs_col0 > 0) known_c = std::min(known_c, pages[k].abs_col0);
+        if (pages[k].abs_row0 > 0) known_r = std::min(known_r, pages[k].abs_row0);
+      }
+      int row_off = 0;
+      for (int start = 0; start < n_grid; start += per_row) {
+        int col_off = 0, band = 0;
+        int band_row = -1;
+        for (int k = start; k < std::min(n_grid, start + per_row); ++k) {
+          if (pages[k].abs_row0 > 0 && known_r < (1 << 30)) band_row = pages[k].abs_row0 - known_r;
+        }
+        if (band_row >= 0) row_off = band_row;
+        for (int k = start; k < std::min(n_grid, start + per_row); ++k) {
+          if (pages[k].abs_col0 > 0 && known_c < (1 << 30)) col_off = pages[k].abs_col0 - known_c;
+          pages[k].col_offset = col_off;
+          pages[k].row_offset = row_off;
+          col_off += pages[k].cols();
+          band = std::max(band, pages[k].rows());
+        }
+        row_off += band;
+      }
+      warnings.push_back("pages_order_unverified");
+    }
   }
   int cols = 0, rows = 0;
   for (const auto& p : pages) {
@@ -379,7 +470,7 @@ ojson recognize(const Context& ctx, const RecognizeRequest& req, const Progress&
     }
     timing["ocr"] = std::lround(ms_since(t));
   }
-  if (!req.pages) {
+  if (!req.pages && n_img == 1) {
     for (const auto& p : pages) {
       if (p.legend.bands >= 2) fail(BC_ERR_NEEDS_USER_CROP, "图里有多组图例，像是多个图案的拼图，请框选其中一个");
     }
@@ -411,7 +502,11 @@ ojson recognize(const Context& ctx, const RecognizeRequest& req, const Progress&
 
   // 多页时把各页图例合并（同色只留一个）
   LegendResult legend;
+  // 有单独的图例页（只有图例、没有网格）时，只用图例页的图例：网格页边缘被切开的半格很像色块
+  const bool has_legend_page = std::any_of(pages.begin(), pages.end(),
+                                           [](const PageResult& p) { return p.legend_only && p.legend.items.size() >= 2; });
   for (const auto& p : pages) {
+    if (has_legend_page && !p.legend_only) continue;
     for (const auto& it : p.legend.items) {
       bool dup = false;
       for (const auto& e : legend.items) dup |= color::delta_e_2000(e.lab, it.lab) < 3.0;
@@ -432,7 +527,7 @@ ojson recognize(const Context& ctx, const RecognizeRequest& req, const Progress&
   // ---------------------------------------------------------------- 多图合集判断：无图例且有多个分散的图案
   // 只针对没有图例的大网格（像 0_0 那种把很多小图摆在一张网格上的封面）。
   // 带色号或带图例的图纸里有几个分开的小图案是正常的，不能要求用户框选。
-  if (!req.pages && legend.items.empty()) {
+  if (!req.pages && n_img == 1 && legend.items.empty()) {
     int beads = 0, texted = 0;
     for (size_t k = 0; k < asg.cls.size(); ++k) {
       if (asg.cls[k] < 0) continue;
@@ -587,6 +682,7 @@ ojson recognize(const Context& ctx, const RecognizeRequest& req, const Progress&
   out["grid"] = {{"cols", cols}, {"rows", rows}};
   ojson pages_j = ojson::array();
   for (const auto& p : pages) {
+    if (p.legend_only) continue;
     const cv::Rect bb = lines_bbox(p.xs, p.ys);
     pages_j.push_back({{"image_index", p.image_index},
                        {"bbox", {bb.x, bb.y, bb.x + bb.width, bb.y + bb.height}},

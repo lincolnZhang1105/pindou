@@ -1,0 +1,21 @@
+{
+ "name": "ocr_v3",
+ "charset": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZx-()#",
+ "blank": 0,
+ "input_h": 32,
+ "params": 406154,
+ "preprocess": "training/ocr/common.py:ink_crop",
+ "trained_on": "合成数据（training/ocr/gen.py，OFL 字体）；整页合成图裁剪 ocr_pool_v3.npz（386803 个，占比 0.5）",
+ "val": {
+  "acc": 0.958,
+  "acc_code": 0.9561752988047809,
+  "acc_coord": 0.9638752052545156,
+  "acc_count": 0.9570621468926553,
+  "pool_acc": 0.9338135974786133,
+  "pool_acc_coord": 0.8686666666666667,
+  "pool_acc_code": 0.9979445015416238,
+  "pool_acc_count": 0.9928131416837782,
+  "pool_acc_cell": 0.9115577889447236
+ },
+ "step": 10000
+}

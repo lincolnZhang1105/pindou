@@ -212,3 +212,40 @@ TEST(Grid, PeriodFromSpikeTrain) {
   const double p = bc::estimate_period(prof, {}, 4, 160);
   EXPECT_NEAR(p, 13.0, 0.2);
 }
+
+// 分页图（B9）：一张图纸按 2×2 切成四页（页边带着被切开的半格），没有坐标时按九宫格版式拼回去
+TEST(Grid, PagedFourPiecesFallbackLayout) {
+  Spec s;
+  s.cols = 24;
+  s.rows = 20;
+  s.pitch = 18;
+  s.legend = false;
+  Truth t;
+  const cv::Mat full = render(s, t);
+  auto X = [&](int i) { return static_cast<int>(std::floor(s.margin + i * s.pitch)); };
+  auto Y = [&](int j) { return static_cast<int>(std::floor(s.margin + j * s.pitch)); };
+  const int cut_c = 12, cut_r = 10, pad = 7;  // 页边多带 7 像素：相邻页的半格
+  std::vector<cv::Mat> pages;
+  for (int pr = 0; pr < 2; ++pr) {
+    for (int pc = 0; pc < 2; ++pc) {
+      const int x0 = pc == 0 ? 0 : X(cut_c) - pad, x1 = pc == 0 ? X(cut_c) + pad + 1 : full.cols;
+      const int y0 = pr == 0 ? 0 : Y(cut_r) - pad, y1 = pr == 0 ? Y(cut_r) + pad + 1 : full.rows;
+      cv::Mat rgba;
+      cv::cvtColor(full(cv::Rect(x0, y0, x1 - x0, y1 - y0)), rgba, cv::COLOR_RGB2RGBA);
+      pages.push_back(rgba.clone());
+    }
+  }
+  std::vector<bc_image> imgs;
+  for (const auto& p : pages) imgs.push_back({p.data, p.cols, p.rows, static_cast<int>(p.step)});
+  bc_ctx* ctx = bc_create(nullptr, R"({"palettes":[]})", nullptr);
+  char* out = bc_recognize(ctx, imgs.data(), static_cast<int>(imgs.size()), nullptr, nullptr, nullptr);
+  const auto j = nlohmann::json::parse(out);
+  bc_free(out);
+  bc_destroy(ctx);
+  ASSERT_FALSE(j.contains("error")) << j.dump();
+  EXPECT_EQ(j["grid"]["cols"].get<int>(), s.cols);
+  EXPECT_EQ(j["grid"]["rows"].get<int>(), s.rows);
+  if (j["grid"]["cols"].get<int>() == s.cols && j["grid"]["rows"].get<int>() == s.rows) {
+    EXPECT_EQ(cell_errors(j, t), 0);
+  }
+}

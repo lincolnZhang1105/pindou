@@ -50,6 +50,7 @@ CoordFit fit(const std::vector<Hit>& hits, std::vector<int>* inlier_cross = null
   std::sort(nums.begin(), nums.end());
   nums.erase(std::unique(nums.begin(), nums.end()), nums.end());
   f.ok = true;
+  f.k = best_k;
   f.support = static_cast<int>(nums.size());
   f.first = lo + best_k;
   f.last = hi + best_k;
@@ -99,9 +100,26 @@ CoordResult read_coords(const nn::OcrModel& ocr, const cv::Mat& gray, int page_b
   };
   std::vector<Hit> col_hits, row_hits;
   const int line_len = std::max(6, static_cast<int>(std::lround(0.9 * std::min(px, py))));
+  const cv::Rect grid_box(cv::Point(static_cast<int>(gx0), static_cast<int>(gy0)), cv::Point(static_cast<int>(gx1), static_cast<int>(gy1)));
   for (const auto& b : bands) {
-    // 合并间距取 0.3 倍字高：同一个数的几位数字之间几乎没有空隙，相邻两个坐标之间总有一点空
-    const auto words = find_words(gray, b.r, page_bg_gray, 60, {}, line_len, 0.3);
+    // 底色：只看这条带在网格外的部分（分页图的页边常常整圈是被切开的格子，整页估出来的底色不对）
+    const cv::Rect band = b.r & cv::Rect(0, 0, gray.cols, gray.rows);
+    if (band.area() <= 0) continue;
+    std::vector<uint8_t> outside;
+    for (int y = band.y; y < band.y + band.height; ++y) {
+      const uint8_t* g = gray.ptr<uint8_t>(y);
+      for (int x = band.x; x < band.x + band.width; ++x) {
+        if (!grid_box.contains(cv::Point(x, y))) outside.push_back(g[x]);
+      }
+    }
+    int bg = page_bg_gray;
+    if (outside.size() >= 20) {
+      std::nth_element(outside.begin(), outside.begin() + outside.size() / 2, outside.end());
+      bg = outside[outside.size() / 2];
+    }
+    // 合并间距取 0.3 倍字高：同一个数的几位数字之间几乎没有空隙，相邻两个坐标之间总有一点空；
+    // 坐标数字常是浅灰小字，亮度差阈值取 40
+    const auto words = find_words(gray, band, bg, 40, {}, line_len, 0.3);
     for (const auto& w : words) {
       if (w.height > 0.9 * (b.cols ? py : py) || w.width > 3.5 * px || w.height < 4) continue;
       const double cx = w.x + w.width / 2.0, cy = w.y + w.height / 2.0;
@@ -113,6 +131,10 @@ CoordResult read_coords(const nn::OcrModel& ocr, const cv::Mat& gray, int page_b
         if (j >= 0) res.rows_with_word.push_back(j);
       }
       const auto t = nn::read_text(ocr, gray, w);
+      if (res.debug.size() < 80) {
+        res.debug.push_back((b.cols ? "c " : "r ") + std::to_string(w.x) + "," + std::to_string(w.y) + "," +
+                            std::to_string(w.width) + "x" + std::to_string(w.height) + "=" + t.text);
+      }
       const auto n = parse_int(t.text);
       if (!n || *n < 1 || *n > 999) continue;
       // 数字中心所在的 lattice 行 / 列（不要求对齐到中心）

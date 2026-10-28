@@ -259,8 +259,11 @@ LegendResult detect_legend(const cv::Mat& rgb, const cv::Rect& exclude, const co
     Region& reg = merged[i];
     const double fill = double(reg.area) / reg.box.area();
     const double aspect = double(reg.box.width) / reg.box.height;
-    if (reg.area >= 80 && reg.box.width >= 10 && reg.box.height >= 10 && fill >= 0.55 && aspect >= 1.0 / 8 &&
-        aspect <= 8 && reg.area < img_area / 10) {
+    // 紧贴网格（排除区）的色块多半是被切开的半格或坐标栏，真正的图例和网格之间总有间隔
+    const cv::Rect grown(reg.box.x - 3, reg.box.y - 3, reg.box.width + 6, reg.box.height + 6);
+    const bool touches_grid = exclude.area() > 0 && (grown & exclude).area() > 0;
+    if (!touches_grid && reg.area >= 80 && reg.box.width >= 10 && reg.box.height >= 10 && fill >= 0.55 &&
+        aspect >= 1.0 / 8 && aspect <= 8 && reg.area < img_area / 10) {
       regions.push_back(std::move(reg));
     }
   }

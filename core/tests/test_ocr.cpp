@@ -9,6 +9,8 @@
 
 #include "nn/ocr.h"
 
+#include <algorithm>
+
 namespace {
 
 nlohmann::json golden() {
@@ -52,4 +54,27 @@ TEST(Ocr, CtcLogprobOfCertainPath) {
   EXPECT_LT(bc::nn::ctc_logprob(t, "AB", "BA"), -10.0);
   EXPECT_LT(bc::nn::ctc_logprob(t, "AB", "A"), -10.0);
   EXPECT_EQ(bc::nn::ctc_logprob(t, "AB", "AC"), -std::numeric_limits<double>::infinity());
+}
+
+// T0.11 DoD：C++（ONNX Runtime）与 PyTorch 的模型输出误差 < 1e-3（golden 由 training/ocr/gen_golden.py 用 PyTorch 生成）
+TEST(Ocr, ModelOutputMatchesPyTorch) {
+  const auto g = golden();
+  const std::string name = g.value("model", "");
+  const std::string onnx = std::string(BC_REPO_ROOT) + "/core/models/" + name + ".onnx";
+  if (name.empty() || !bc::nn::available() || !std::ifstream(onnx).good()) GTEST_SKIP() << "没有模型输出 golden 或模型文件";
+  auto m = bc::nn::OcrModel::load(std::string(BC_REPO_ROOT) + "/core/models", name);
+  ASSERT_TRUE(m);
+  const int h = g["image_shape"][0], w = g["image_shape"][1];
+  cv::Mat img(h, w, CV_8UC1);
+  for (int i = 0; i < h * w; ++i) img.data[i] = static_cast<uint8_t>(g["image"][i].get<int>());
+  for (const auto& it : g["items"]) {
+    if (!it.contains("logp")) continue;
+    const auto b = it["box"];
+    const auto t = bc::nn::read_text(*m, img, cv::Rect(b[0], b[1], b[2], b[3]));
+    const auto& want = it["logp"];
+    ASSERT_EQ(t.lp.size(), want.size()) << b.dump();
+    double maxd = 0;
+    for (size_t k = 0; k < want.size(); ++k) maxd = std::max(maxd, std::fabs(t.lp[k] - want[k].get<double>()));
+    EXPECT_LT(maxd, 1e-3) << "框 " << b.dump();
+  }
 }
