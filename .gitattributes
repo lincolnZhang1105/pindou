@@ -1,0 +1,14 @@
+# 行尾约定：仓库里统一存 LF；脚本按运行环境固定检出时的行尾，不受各人 core.autocrlf 设置影响
+* text=auto
+
+# Git Bash / WSL 执行的脚本必须是 LF，否则 bash 会报 $'\r': command not found
+*.sh text eol=lf
+
+# cmd.exe 批处理必须是 CRLF，否则按 GBK 逐行解析会出错
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# 二进制文件
+*.onnx binary
+*.png binary
+*.npz binary
