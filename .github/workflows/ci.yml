@@ -1,0 +1,83 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------- core：三个桌面平台编译 + 单元测试（T0.1）
+  core:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-14, windows-2022]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: 依赖缓存（OpenCV 源码和编译产物）
+        uses: actions/cache@v4
+        with:
+          path: .deps
+          key: deps-${{ matrix.os }}-${{ hashFiles('core/deps.json', 'core/scripts/fetch_deps.py') }}
+      - name: 下载依赖、编译精简版 OpenCV
+        run: python core/scripts/fetch_deps.py --build-opencv
+      - name: 配置
+        run: cmake -S core -B build/ci -DCMAKE_BUILD_TYPE=Release
+      - name: 编译
+        run: cmake --build build/ci --config Release --parallel
+      - name: 单元测试（data/samples 不在仓库里，样例冒烟测试会自动跳过）
+        run: ctest --test-dir build/ci -C Release --output-on-failure
+      - name: CLI 冒烟
+        shell: bash
+        run: |
+          CLI=$(ls build/ci/beadcore-cli build/ci/Release/beadcore-cli.exe 2>/dev/null | head -1)
+          "$CLI" version
+
+  # ---------------------------------------------------------------- bench：Python 工具链测试
+  bench:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r bench/requirements.txt
+      - name: 生成色卡（正式色卡 + bench 内部色卡，都来自仓库里已登记的 CSV，不联网）
+        run: |
+          python -m palettes.build_palettes
+          python -m palettes.build_palettes --extra bench/palettes_unverified --out bench/palettes_unverified/build/palettes_bench.json
+      - run: python -m pytest bench/tests -q
+
+  # ---------------------------------------------------------------- dev 集质量门禁（03 §3.6，AGENTS 规则 3）
+  # 只能在挂载了私有数据（PINDOU_DATA_DIR）的 self-hosted runner 上跑。
+  # PO 准备好私有存储和 runner 之后，把仓库变量 PINDOU_DEV_GATE 设为 true 打开。
+  dev-gate:
+    if: vars.PINDOU_DEV_GATE == 'true'
+    needs: [core, bench]
+    runs-on: [self-hosted, pindou-data]
+    steps:
+      - uses: actions/checkout@v4
+      - name: 编译 CLI
+        run: |
+          python core/scripts/fetch_deps.py --build-opencv
+          cmake -S core -B build/gate -DCMAKE_BUILD_TYPE=Release -DBC_BUILD_TESTS=OFF
+          cmake --build build/gate --config Release --parallel
+      - name: 跑 dev 集
+        env:
+          PINDOU_DATA_DIR: ${{ vars.PINDOU_DATA_DIR }}
+        run: |
+          python -m palettes.build_palettes --extra bench/palettes_unverified --out bench/palettes_unverified/build/palettes_bench.json
+          CLI=$(ls build/gate/beadcore-cli build/gate/Release/beadcore-cli.exe 2>/dev/null | head -1)
+          python -m bench.engine run --split dev --run ci-${{ github.sha }} --cli "$CLI" --overwrite
+      - name: 门禁：确定性指标不允许变差
+        env:
+          PINDOU_DATA_DIR: ${{ vars.PINDOU_DATA_DIR }}
+        run: python -m bench.eval gate --preds ci-${{ github.sha }}

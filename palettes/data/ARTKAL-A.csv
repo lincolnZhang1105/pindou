@@ -1,0 +1,146 @@
+code,name,r,g,b,series,transparent
+A01,White,234,238,243,A,0
+A02,Black,41,42,43,A,0
+A03,Tangerine,255,166,48,A,0
+A04,Yellow Orange,230,135,57,A,0
+A05,Tall Poppy,203,53,49,A,0
+A06,Red,182,25,39,A,0
+A07,Carnation Pink,225,130,176,A,0
+A08,Hot Pink,220,81,154,A,0
+A09,Magenta,218,67,131,A,0
+A10,Picasso,234,222,127,A,0
+A11,Yellow,234,193,37,A,0
+A12,Pistachio,151,207,135,A,0
+A13,Pastel Green,139,178,58,A,0
+A14,Green,0,144,83,A,0
+A15,Green Tea,0,118,95,A,0
+A16,Bright Carrot,249,111,64,A,0
+A17,Orange,235,96,39,A,0
+A18,Sky Blue,167,205,222,A,0
+A19,Baby Blue,46,171,216,A,0
+A20,Light Blue,0,132,206,A,0
+A21,Dark Blue,0,79,164,A,0
+A22,Bubble Gun,242,191,184,A,0
+A23,Sand,220,163,132,A,0
+A24,Beeswax,238,211,158,A,0
+A25,Lavender,138,126,194,A,0
+A26,Pastel Lavender,145,101,178,A,0
+A27,Purple,72,51,126,A,0
+A28,Marigold,178,121,56,A,0
+A29,Buccaneer,179,85,64,A,0
+A30,Redwood,154,69,65,A,0
+A31,Light Brown,137,93,73,A,0
+A32,Brown,101,70,61,A,0
+A33,Gray,149,150,152,A,0
+A34,Dark Gray,112,117,123,A,0
+A35,Silver,103,107,115,A,0
+A36,Old Pink,206,109,131,A,0
+A37,True Blue,0,120,191,A,0
+A38,Turquoise,85,164,217,A,0
+A39,Shadow Green,158,201,205,A,0
+A40,Key Lomen Pie,205,192,63,A,0
+A41,Pastel Yellow,225,211,103,A,0
+A42,Sandstorm,225,200,53,A,0
+A43,Paprika,177,24,54,A,0
+A44,Burning Sand,238,146,124,A,0
+A46,Canary,226,230,93,A,0
+A47,Vanilla,233,193,166,A,0
+A48,Corn,236,192,61,A,0
+A49,Raspberry Pink,239,103,178,A,0
+A50,Maverick,192,183,215,A,0
+A51,Spring Sun,223,218,189,A,0
+A52,Butterfly Bush,79,57,137,A,0
+A53,Bright Green,142,195,36,A,0
+A54,Medium Turquoise,0,165,161,A,0
+A56,Oslo Gray,130,135,139,A,0
+A58,Black Rock,54,56,77,A,0
+A60,Sea Mist,178,215,206,A,0
+A69,Mine Shaft,56,62,68,A,0
+A70,Brunswick Green,21,56,56,A,0
+A71,Goldenrod,232,174,0,A,0
+A72,Pastel Orange,217,179,94,A,0
+A73,Sienna,187,104,51,A,0
+A74,Deer,191,145,104,A,0
+A75,Clay,170,116,78,A,0
+A76,Coral Red,236,98,94,A,0
+A77,Deep Chestnut,190,93,101,A,0
+A78,Red Wine,153,50,58,A,0
+A79,Light Sea Blue,104,196,210,A,0
+A80,Sea Blue,0,147,169,A,0
+A81,Steel Blue,90,176,191,A,0
+A82,Azure,0,158,194,A,0
+A83,Dark Steel Blue,0,132,178,A,0
+A84,Drark Algae,173,173,41,A,0
+A85,Dark Olive,143,142,60,A,0
+A86,Jade Green,0,125,43,A,0
+A87,Ghost While,212,216,211,A,0
+A88,Ash Grey,194,196,194,A,0
+A89,Light Gray,167,172,173,A,0
+A90,Charcoal Gray,86,90,94,A,0
+A91,Dandelion,206,164,51,A,0
+A92,Pale Skin,220,183,148,A,0
+A93,Warm Blush,221,146,133,A,0
+A94,Salmon,224,123,105,A,0
+A95,Apricot,239,127,97,A,0
+A96,Papaya,220,119,43,A,0
+A97,Himalaya Blue,106,174,219,A,0
+A98,Waterfall,97,187,211,A,0
+A99,Lagoon,39,155,190,A,0
+A100,Electric Blue,0,167,227,A,0
+A101,Pool Blue,0,119,202,A,0
+A102,Caribbian Blue,0,90,169,A,0
+A103,Deep Water,0,127,158,A,0
+A104,Petrol Blue,0,125,145,A,0
+A105,Wegdewood Blue,0,100,154,A,0
+A106,Pond Blue,0,108,159,A,0
+A107,Seashell Beige,207,193,121,A,0
+A108,Beige,196,174,100,A,0
+A109,Beach Beige,171,151,69,A,0
+A110,Caffe Latté,151,129,56,A,0
+A111,Oaktree Brown,144,124,65,A,0
+A112,Khaki,182,174,132,A,0
+A113,Light Greengray,165,159,101,A,0
+A114,Mossy Green,147,141,84,A,0
+A115,Earth Green,141,139,81,A,0
+A116,Sage Green,127,126,73,A,0
+A117,Pinetree Green,91,110,53,A,0
+A118,Frosty Blue,138,213,201,A,0
+A119,Polar Mint,124,210,165,A,0
+A120,Celadon Green,114,172,154,A,0
+A121,Eucalyptus,0,178,111,A,0
+A122,Clover Field,62,183,36,A,0
+A123,Pooltable Felt,13,117,53,A,0
+A124,Snake Green,0,125,110,A,0
+A125,Dark Eucalyptus,0,110,105,A,0
+A126,Marsmallow Rose,223,195,225,A,0
+A127,Light Grape,211,142,212,A,0
+A128,Rosebud Pink,213,166,186,A,0
+A129,Fuschia,214,102,142,A,0
+A130,Candy Violet,184,170,217,A,0
+A131,Flamingo,223,72,109,A,0
+A132,Pink Plum,188,60,166,A,0
+A133,Amethyst,128,56,151,A,0
+A134,Moonlight Blue,167,186,225,A,0
+A135,Summer Rain,175,184,223,A,0
+A136,Azur Blue,107,154,212,A,0
+A137,Cornflower Blue,90,137,206,A,0
+A138,Forget Me Not,101,138,208,A,0
+A139,Indigo,86,108,189,A,0
+A140,Horizon Blue,77,116,198,A,0
+A141,Cobolt,65,109,190,A,0
+A142,Royal Blue,48,66,158,A,0
+A143,Marine,2,66,136,A,0
+A144,Pale Yellow Moss,214,202,106,A,0
+A145,Bloodrose Red,157,26,56,A,0
+A146,Spearmint,128,183,161,A,0
+A147,Mocha,122,89,79,A,0
+A148,Creme,239,219,161,A,0
+A149,Iris Violet,136,132,208,A,0
+A150,Forrest Green,52,86,33,A,0
+A151,Lilac,174,173,220,A,0
+A152,Pale Lilac,188,195,225,A,0
+A153,Sahara Sand,227,192,154,A,0
+A154,Sunkissed Teint,197,139,96,A,0
+A155,Steel Grey,90,95,101,A,0
+A156,Iron Grey,76,81,86,A,0
+A157,Pepper,58,62,66,A,0

@@ -1,0 +1,14 @@
+{
+  "_comment": "【只供 bench 内部使用，禁止复制到 palettes/、core/、app/、backend/】这些色卡的来源无法确认不是派生自 Zippland/perler-beads（AGPL），核实过程见 palettes/SOURCES.md。用途：benchmark 时的品牌判断和无图例兜底。合成训练数据不使用这里的色值（05 §7）。",
+  "upstreams": {
+    "beadcolors-mard": {"repo": "maxcleme/beadcolors（raw/mard.csv，PR #66/#68，数据抓自 pixel-beads.com）", "commit": "f97ff4283d03cef5cd7e1071a86f5892e0c0c61b", "license": "仓库 MIT，但上游数据权属存疑"},
+    "hansbug": {"repo": "HansBug/pindou-color-data", "commit": "178dafbc9e77d3de556550dbd058270200129186", "license": "MIT 文本（GitHub 识别为 NOASSERTION）；上游 get-colors-from-beans 来源不明"}
+  },
+  "palettes": [
+    {"id": "MARD-291", "brand": "MARD", "bead_mm": 2.6, "upstream": "beadcolors-mard", "file": "mard.csv", "derived_from_zippland": "partial", "verified": false},
+    {"id": "MARD-221", "brand": "MARD", "bead_mm": 2.6, "upstream": "beadcolors-mard", "file": "mard.csv", "subset_codes_from": "mard-221-github", "derived_from_zippland": "partial", "verified": false},
+    {"id": "COCO-291", "brand": "COCO", "bead_mm": 2.6, "upstream": "hansbug", "dir": "coco-291", "derived_from_zippland": "unknown", "verified": false},
+    {"id": "PANPAN-289", "brand": "盼盼", "bead_mm": 2.6, "upstream": "hansbug", "dir": "panpan-289", "derived_from_zippland": "unknown", "verified": false},
+    {"id": "MIXIAOWO-290", "brand": "咪小窝", "bead_mm": 2.6, "upstream": "hansbug", "dir": "mixiaowo-290", "derived_from_zippland": "unknown", "verified": false}
+  ]
+}

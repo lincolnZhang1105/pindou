@@ -1,0 +1,407 @@
+{
+ "_comment": "合成渲染字体锁文件。只允许 OFL-1.1 / Apache-2.0（05 §7）。二进制不进 git，用 `python -m bench.synth fonts` 下载。",
+ "source_repo": "google/fonts",
+ "commit": "a4c0b21f839d7ac65a7d8b49eb81bddd110774a3",
+ "fonts": [
+  {
+   "id": "noto-sans-sc",
+   "family": "Noto Sans SC",
+   "style": "cjk",
+   "roles": [
+    "cell",
+    "coord",
+    "legend",
+    "title",
+    "watermark",
+    "ui"
+   ],
+   "cjk": true,
+   "variable": true,
+   "weights": [
+    "light",
+    "regular",
+    "medium",
+    "bold"
+   ],
+   "license": "OFL-1.1",
+   "upstream_dir": "https://github.com/google/fonts/tree/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/notosanssc",
+   "files": [
+    {
+     "name": "NotoSansSC-VF.ttf",
+     "weight": null,
+     "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/notosanssc/NotoSansSC%5Bwght%5D.ttf",
+     "sha256": "a3041811a78c361b1de50f953c805e0244951c21c5bd412f7232ef0d899af0da"
+    }
+   ],
+   "license_file": {
+    "name": "OFL.txt",
+    "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/notosanssc/OFL.txt",
+    "sha256": "1c05c68c34f9708415aada51f17e1b0092d2cea709bf4a94cd38114f9e73d7d9"
+   }
+  },
+  {
+   "id": "zcool-kuaile",
+   "family": "ZCOOL KuaiLe",
+   "style": "cjk_display",
+   "roles": [
+    "title",
+    "watermark"
+   ],
+   "cjk": true,
+   "variable": false,
+   "weights": [
+    "regular"
+   ],
+   "license": "OFL-1.1",
+   "upstream_dir": "https://github.com/google/fonts/tree/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/zcoolkuaile",
+   "files": [
+    {
+     "name": "ZCOOLKuaiLe-Regular.ttf",
+     "weight": "regular",
+     "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/zcoolkuaile/ZCOOLKuaiLe-Regular.ttf",
+     "sha256": "812a6fc1fe54b6d73a419245c32dfeba8aa33104d5be90d1cf6af082007cb71d"
+    }
+   ],
+   "license_file": {
+    "name": "OFL.txt",
+    "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/zcoolkuaile/OFL.txt",
+    "sha256": "538078469839b4a2e7ad22bef4ebe41681a4e53749bb2a072144024f1d6d703d"
+   }
+  },
+  {
+   "id": "inter",
+   "family": "Inter",
+   "style": "sans",
+   "roles": [
+    "cell",
+    "coord",
+    "legend",
+    "ui"
+   ],
+   "cjk": false,
+   "variable": true,
+   "weights": [
+    "regular",
+    "medium",
+    "semibold",
+    "bold"
+   ],
+   "license": "OFL-1.1",
+   "upstream_dir": "https://github.com/google/fonts/tree/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/inter",
+   "files": [
+    {
+     "name": "Inter-VF.ttf",
+     "weight": null,
+     "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf",
+     "sha256": "29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031"
+    }
+   ],
+   "license_file": {
+    "name": "OFL.txt",
+    "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/inter/OFL.txt",
+    "sha256": "5b9321a4298cfeb6b34354164a1c3afc3db114569984c502b9b35d988fd58c57"
+   }
+  },
+  {
+   "id": "open-sans",
+   "family": "Open Sans",
+   "style": "sans",
+   "roles": [
+    "cell",
+    "coord",
+    "legend",
+    "ui"
+   ],
+   "cjk": false,
+   "variable": true,
+   "weights": [
+    "regular",
+    "medium",
+    "semibold",
+    "bold"
+   ],
+   "license": "OFL-1.1",
+   "upstream_dir": "https://github.com/google/fonts/tree/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/opensans",
+   "files": [
+    {
+     "name": "OpenSans-VF.ttf",
+     "weight": null,
+     "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/opensans/OpenSans%5Bwdth%2Cwght%5D.ttf",
+     "sha256": "36643644f318a812aab2d2ed3bb98f8cf0872527f835fe9398d95fe6b9adb878"
+    }
+   ],
+   "license_file": {
+    "name": "OFL.txt",
+    "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/opensans/OFL.txt",
+    "sha256": "fbbbcfef55318de350562559b671360de6d597112ecc5c73881b05092db89602"
+   }
+  },
+  {
+   "id": "roboto",
+   "family": "Roboto",
+   "style": "sans",
+   "roles": [
+    "cell",
+    "coord",
+    "legend",
+    "ui"
+   ],
+   "cjk": false,
+   "variable": true,
+   "weights": [
+    "regular",
+    "medium",
+    "bold"
+   ],
+   "license": "OFL-1.1",
+   "upstream_dir": "https://github.com/google/fonts/tree/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/roboto",
+   "files": [
+    {
+     "name": "Roboto-VF.ttf",
+     "weight": null,
+     "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/roboto/Roboto%5Bwdth%2Cwght%5D.ttf",
+     "sha256": "d7598e12c5dbef095ff8272cfc55da0250bd07fbdecbac8a530b9b277872a134"
+    }
+   ],
+   "license_file": {
+    "name": "OFL.txt",
+    "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/roboto/OFL.txt",
+    "sha256": "061402327a96aadb0bfb694a960ed289ecd38d383e396243831ab81feb109c41"
+   }
+  },
+  {
+   "id": "arimo",
+   "family": "Arimo",
+   "style": "sans",
+   "roles": [
+    "cell",
+    "coord",
+    "legend"
+   ],
+   "cjk": false,
+   "variable": true,
+   "weights": [
+    "regular",
+    "medium",
+    "bold"
+   ],
+   "license": "OFL-1.1",
+   "upstream_dir": "https://github.com/google/fonts/tree/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/arimo",
+   "files": [
+    {
+     "name": "Arimo-VF.ttf",
+     "weight": null,
+     "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/arimo/Arimo%5Bwght%5D.ttf",
+     "sha256": "e43898b143ec826ac8cb4034816458a7047fbe0836558de2a1f8c6223ae3e0ca"
+    }
+   ],
+   "license_file": {
+    "name": "OFL.txt",
+    "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/arimo/OFL.txt",
+    "sha256": "11cce536cd2f3864d767003af5dcd739e2e15818cf2279b6175edeadd3960992"
+   }
+  },
+  {
+   "id": "lato",
+   "family": "Lato",
+   "style": "sans",
+   "roles": [
+    "cell",
+    "coord",
+    "legend"
+   ],
+   "cjk": false,
+   "variable": false,
+   "weights": [
+    "regular",
+    "bold"
+   ],
+   "license": "OFL-1.1",
+   "upstream_dir": "https://github.com/google/fonts/tree/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/lato",
+   "files": [
+    {
+     "name": "Lato-Regular.ttf",
+     "weight": "regular",
+     "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/lato/Lato-Regular.ttf",
+     "sha256": "d636e4683231f931eda222d588e944d082bfd3bdba02f928bee461c0f185b251"
+    },
+    {
+     "name": "Lato-Bold.ttf",
+     "weight": "bold",
+     "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/lato/Lato-Bold.ttf",
+     "sha256": "8a0aace75d33794eece4b28187bfc1df0bbd2888b5d8a56e01788c8d65d16be1"
+    }
+   ],
+   "license_file": {
+    "name": "OFL.txt",
+    "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/lato/OFL.txt",
+    "sha256": "74ba064d03f1f1c4a952da936c3eb71866c34404916734de3cae73b34357e59e"
+   }
+  },
+  {
+   "id": "barlow-condensed",
+   "family": "Barlow Condensed",
+   "style": "condensed",
+   "roles": [
+    "cell",
+    "coord",
+    "legend"
+   ],
+   "cjk": false,
+   "variable": false,
+   "weights": [
+    "medium",
+    "semibold"
+   ],
+   "license": "OFL-1.1",
+   "upstream_dir": "https://github.com/google/fonts/tree/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/barlowcondensed",
+   "files": [
+    {
+     "name": "BarlowCondensed-Medium.ttf",
+     "weight": "medium",
+     "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/barlowcondensed/BarlowCondensed-Medium.ttf",
+     "sha256": "262bd143292ce479ee0cd09a42b47ab173fca8e9c6eb5ed0b5c8a845bc371d17"
+    },
+    {
+     "name": "BarlowCondensed-SemiBold.ttf",
+     "weight": "semibold",
+     "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/barlowcondensed/BarlowCondensed-SemiBold.ttf",
+     "sha256": "7b619d14bc2327509a9ef32b0890f709626f7ecc9ff61191c2a4314c5499d2d9"
+    }
+   ],
+   "license_file": {
+    "name": "OFL.txt",
+    "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/barlowcondensed/OFL.txt",
+    "sha256": "186d750eb496a4c17a76385f82be6aea2ac1cf2de074a811d63786cf374ea73f"
+   }
+  },
+  {
+   "id": "roboto-mono",
+   "family": "Roboto Mono",
+   "style": "mono",
+   "roles": [
+    "cell",
+    "coord",
+    "legend"
+   ],
+   "cjk": false,
+   "variable": true,
+   "weights": [
+    "regular",
+    "medium",
+    "bold"
+   ],
+   "license": "OFL-1.1",
+   "upstream_dir": "https://github.com/google/fonts/tree/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/robotomono",
+   "files": [
+    {
+     "name": "RobotoMono-VF.ttf",
+     "weight": null,
+     "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/robotomono/RobotoMono%5Bwght%5D.ttf",
+     "sha256": "66a80e79d17e4c7cabd162e2916578a4cc08fd19eef6e2a643305eae9c567b2b"
+    }
+   ],
+   "license_file": {
+    "name": "OFL.txt",
+    "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/robotomono/OFL.txt",
+    "sha256": "50ab8dd54680d3473f649c9db86fece88434d097c7834475c1c72d2f8c429215"
+   }
+  },
+  {
+   "id": "source-code-pro",
+   "family": "Source Code Pro",
+   "style": "mono",
+   "roles": [
+    "cell",
+    "coord",
+    "legend"
+   ],
+   "cjk": false,
+   "variable": true,
+   "weights": [
+    "regular",
+    "medium",
+    "semibold",
+    "bold"
+   ],
+   "license": "OFL-1.1",
+   "upstream_dir": "https://github.com/google/fonts/tree/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/sourcecodepro",
+   "files": [
+    {
+     "name": "SourceCodePro-VF.ttf",
+     "weight": null,
+     "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/sourcecodepro/SourceCodePro%5Bwght%5D.ttf",
+     "sha256": "b400fc584e10aff25d0e775ce181b4fc1c5ea1b5dc37b81aeb2084375b945790"
+    }
+   ],
+   "license_file": {
+    "name": "OFL.txt",
+    "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/sourcecodepro/OFL.txt",
+    "sha256": "cb30d3086a8b3ce0b9e3690bf48d6620402b61160bc658076f95180ccd9e9dae"
+   }
+  },
+  {
+   "id": "nunito",
+   "family": "Nunito",
+   "style": "rounded",
+   "roles": [
+    "cell",
+    "coord",
+    "legend",
+    "ui"
+   ],
+   "cjk": false,
+   "variable": true,
+   "weights": [
+    "regular",
+    "semibold",
+    "bold"
+   ],
+   "license": "OFL-1.1",
+   "upstream_dir": "https://github.com/google/fonts/tree/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/nunito",
+   "files": [
+    {
+     "name": "Nunito-VF.ttf",
+     "weight": null,
+     "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/nunito/Nunito%5Bwght%5D.ttf",
+     "sha256": "bb55a5ca5c2042335b3991af27c4d0705d0ef41cac6164ac737fd8f2a1e85207"
+    }
+   ],
+   "license_file": {
+    "name": "OFL.txt",
+    "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/nunito/OFL.txt",
+    "sha256": "580df76c95a1ec5ab878ceb25bb3d85c6a076804e9c970c8c6972aea775fdf65"
+   }
+  },
+  {
+   "id": "varela-round",
+   "family": "Varela Round",
+   "style": "rounded",
+   "roles": [
+    "cell",
+    "coord",
+    "legend"
+   ],
+   "cjk": false,
+   "variable": false,
+   "weights": [
+    "regular"
+   ],
+   "license": "OFL-1.1",
+   "upstream_dir": "https://github.com/google/fonts/tree/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/varelaround",
+   "files": [
+    {
+     "name": "VarelaRound-Regular.ttf",
+     "weight": "regular",
+     "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/varelaround/VarelaRound-Regular.ttf",
+     "sha256": "e1e47eb66dbc2ddc106661338e712d9176c9e83c669a82fde155324823d03aa2"
+    }
+   ],
+   "license_file": {
+    "name": "OFL.txt",
+    "url": "https://raw.githubusercontent.com/google/fonts/a4c0b21f839d7ac65a7d8b49eb81bddd110774a3/ofl/varelaround/OFL.txt",
+    "sha256": "45446732635812510428bf1bad902a8b133f3c7348ad8593ecca90895595b278"
+   }
+  }
+ ]
+}

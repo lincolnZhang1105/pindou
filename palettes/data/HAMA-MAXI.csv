@@ -1,0 +1,26 @@
+code,name,r,g,b,series,transparent
+H01,White,229,236,241,H,0
+H03,Yellow,233,199,4,H,0
+H05,Red,180,6,14,H,0
+H07,Purple,113,34,151,H,0
+H09,Light Blue,2,91,195,H,0
+H10,Green,2,118,67,H,0
+H17,Grey,131,143,152,H,0
+H18,Black,20,19,21,H,0
+H20,Reddish Brown,141,42,15,H,0
+H26,Matt Rose,232,164,152,H,0
+H32,Neon Fuchsia,255,32,141,H,0
+H34,Neon Yellow,229,239,19,H,0
+H35,Neon Red,255,40,51,H,0
+H36,Neon Blue,35,83,176,H,0
+H37,Neon Green,6,183,60,H,0
+H38,Neon Orange,253,134,0,H,0
+H43,Pastel Yellow,231,228,90,H,0
+H44,Pastel Red,249,97,96,H,0
+H45,Pastel Purple,142,105,205,H,0
+H46,Pastel Blue,81,174,228,H,0
+H47,Pastel Green,128,223,150,H,0
+H48,Pastel Pink,214,122,209,H,0
+H60,Teddybear Brown,240,152,30,H,0
+H70,Light Grey,165,179,192,H,0
+H79,Apricot,248,118,51,H,0

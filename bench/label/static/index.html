@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>豆伴 · 真值标注</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header id="topbar">
+  <button id="btn-list" title="显示 / 隐藏任务列表（L）">列表</button>
+  <strong id="task-title">未选择任务</strong>
+  <span id="task-meta" class="muted"></span>
+  <span class="spacer"></span>
+  <span id="legend-status" class="pill"></span>
+  <span id="save-status" class="muted"></span>
+  <label class="muted">我是 <input id="user-name" size="8" placeholder="名字"></label>
+  <button id="btn-export" class="primary" title="校验并导出到 labels/&lt;id&gt;.json">导出真值</button>
+  <button id="btn-review" class="hidden" title="第二个人复核通过（XL 档和分页图必须复核）">复核通过</button>
+  <button id="btn-help" title="快捷键（?）">?</button>
+</header>
+
+<div id="main">
+  <aside id="list-panel">
+    <div class="filters">
+      <select id="f-split">
+        <option value="">全部</option><option value="dev">dev</option><option value="test">test</option>
+        <option value="-">未划分</option>
+      </select>
+      <select id="f-status">
+        <option value="">全部状态</option><option value="unlabeled">未标</option><option value="draft">草稿</option>
+        <option value="legend_fail">图例校验失败</option><option value="ready">草稿（可导出）</option>
+        <option value="needs_review">待复核</option><option value="done">完成</option><option value="invalid">真值无效</option>
+      </select>
+      <input id="f-search" placeholder="搜索 id" size="10">
+    </div>
+    <div id="task-count" class="muted"></div>
+    <table id="task-table">
+      <thead><tr><th>id</th><th>集</th><th>类型</th><th>档</th><th>状态</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </aside>
+
+  <section id="canvas-wrap">
+    <div id="toolbar">
+      <span class="group" id="tools">
+        <button data-tool="grid" title="网格（G）：拖四个角定位，拖线微调">网格</button>
+        <button data-tool="paint" title="涂色（B）：点击或拖动；Alt+点击 = 吸管">涂色</button>
+        <button data-tool="fill" title="填充同色连通区域（F）">填充</button>
+        <button data-tool="pick" title="吸管（I）：取格子的色号作为画笔">吸管</button>
+        <button data-tool="sample" title="取色（S）：在图上点图例色块，给选中的图例行取色">取色</button>
+      </span>
+      <span class="group">
+        画笔 <span id="brush-chip" class="chip"></span>
+        <input id="code-input" list="code-list" size="7" placeholder="色号 /" title="输入色号后回车（/ 聚焦）">
+        <button id="btn-empty" title="画笔设为空格（E）">空格</button>
+        <span id="recent"></span>
+      </span>
+      <span class="group">
+        <label title="色块叠加透明度（[ / ]）">叠加 <input id="alpha" type="range" min="0" max="100" value="45"></label>
+        <label title="格内显示色号（T）"><input id="show-text" type="checkbox" checked>文字</label>
+        <label title="显示网格线"><input id="show-grid" type="checkbox" checked>网格</label>
+        <label title="只高亮画笔色号（H）"><input id="show-hl" type="checkbox">高亮</label>
+        <button id="btn-flag-prev" title="上一个可疑格（Shift+N）">‹</button>
+        <span id="flag-count" class="muted" title="可疑格数量">0</span>
+        <button id="btn-flag-next" title="下一个可疑格（N）">›</button>
+      </span>
+      <span class="group">
+        <select id="page-select" title="当前页（PageUp / PageDown）"></select>
+        <button id="btn-fit" title="适应窗口（0）">适应</button>
+        <button id="btn-undo" title="撤销（Ctrl+Z）">撤销</button>
+        <button id="btn-redo" title="重做（Ctrl+Y）">重做</button>
+      </span>
+    </div>
+    <canvas id="canvas"></canvas>
+    <div id="statusbar"><span id="st-pos"></span><span id="st-msg"></span></div>
+  </section>
+
+  <aside id="side-panel">
+    <nav id="tabs">
+      <button data-tab="grid" class="active">网格</button>
+      <button data-tab="legend">图例</button>
+      <button data-tab="init">初稿</button>
+      <button data-tab="meta">信息</button>
+    </nav>
+
+    <div class="tab" id="tab-grid">
+      <h4>整张图纸</h4>
+      <div class="row">列 <input id="g-cols" type="number" min="1" style="width:5em">
+        行 <input id="g-rows" type="number" min="1" style="width:5em">
+        <button id="btn-grid-apply">应用</button></div>
+      <p class="hint">先填行列数，再用「网格」工具拖动四个角对准图纸的外框（误差控制在 1/4 格以内），然后点「吸附网格线」。</p>
+      <h4>当前页 <span id="page-label" class="muted"></span></h4>
+      <div class="row">图片 <select id="p-image"></select></div>
+      <div class="row">列 <input id="p-cols" type="number" min="1" style="width:4.5em">
+        行 <input id="p-rows" type="number" min="1" style="width:4.5em"></div>
+      <div class="row">列偏移 <input id="p-coff" type="number" min="0" style="width:4.5em">
+        行偏移 <input id="p-roff" type="number" min="0" style="width:4.5em"></div>
+      <div class="row"><button id="btn-page-apply">应用到本页</button>
+        <button id="btn-page-add">添加页</button> <button id="btn-page-del">删除本页</button></div>
+      <div class="row"><button id="btn-even" title="在当前外框内均分，清除锚点">均分</button>
+        <button id="btn-snap" class="primary" title="把每条线吸附到图上最近的网格线">吸附网格线</button>
+        <button id="btn-anchor-reset" title="只保留首尾两条线作锚点">清除锚点</button></div>
+      <p class="hint">拖动一条线：它变成锚点（橙色），相邻锚点之间的线按比例重新均分，用来修正「越往后越对不齐」。
+        Shift+拖动：只移动这一条。</p>
+      <h4>分页图布局（T4）</h4>
+      <div class="row">每页 <input id="l-cols" type="number" min="1" style="width:4em"> ×
+        <input id="l-rows" type="number" min="1" style="width:4em"> 格，每行
+        <input id="l-per-row" type="number" min="1" style="width:3em"> 页</div>
+      <div class="row"><button id="btn-layout">按图片顺序排布</button></div>
+      <p class="hint">每张图一页，按 image_id 末尾序号的顺序从左到右、从上到下排。</p>
+    </div>
+
+    <div class="tab hidden" id="tab-legend">
+      <div class="row"><label><input id="no-legend" type="checkbox"> 图纸本身没有图例（跳过图例校验）</label></div>
+      <div class="row">
+        <textarea id="legend-bulk" rows="3" placeholder="批量录入：A1 x102, A11 x2, H7 718 …"></textarea>
+      </div>
+      <div class="row"><button id="btn-legend-parse">解析并合并</button>
+        <button id="btn-legend-add">添加一行</button>
+        <button id="btn-legend-fromcells" title="把格子里出现、图例里没有的色号加进来（颗数留空，要照图填）">补全色号</button></div>
+      <div class="row empty-row">空格颜色 <span id="empty-swatch" class="swatch"></span>
+        <button id="btn-empty-sample" title="在图上点一个空格，用来区分空格和白豆">取色</button></div>
+      <table id="legend-table">
+        <thead><tr><th></th><th>色号</th><th>图例</th><th>实际</th><th>差</th><th></th><th></th></tr></thead>
+        <tbody></tbody>
+        <tfoot><tr><td></td><td>合计</td><td id="legend-sum"></td><td id="actual-sum"></td><td id="diff-sum"></td><td></td><td></td></tr></tfoot>
+      </table>
+      <p class="hint">点一行 = 选作画笔。「取色」后在图上点该色号的图例色块（或任意一个该色的格子）；
+        取完自动跳到下一行。图例颗数必须照图填，不要从格子抄。</p>
+    </div>
+
+    <div class="tab hidden" id="tab-init">
+      <h4>从预测结果导入</h4>
+      <div class="row"><select id="pred-runs"></select> <button id="btn-pred-import">导入</button></div>
+      <div class="row"><label><input id="pi-grid" type="checkbox" checked>网格</label>
+        <label><input id="pi-cells" type="checkbox" checked>格子</label>
+        <label><input id="pi-legend" type="checkbox" checked>图例</label></div>
+      <p class="hint">读 $PINDOU_DATA_DIR/preds/&lt;run&gt;/&lt;id&gt;.json（RecognitionResult）。不确定的格子会标成可疑格。</p>
+      <h4>按颜色自动填充</h4>
+      <p class="hint">先在「图例」页给每个色号取色，并给「空格颜色」取色。每格取中心区域颜色的中位数，按 CIEDE2000
+        找最近的色块；白豆和空格颜色相同时按格内有没有文字区分。</p>
+      <div class="row">中心区域 <input id="af-inner" type="number" step="0.05" min="0.2" max="0.9" value="0.5" style="width:4em">
+        文字比例 <input id="af-ink" type="number" step="0.01" min="0" max="0.5" value="0.04" style="width:4em"></div>
+      <div class="row">最大色差 <input id="af-maxde" type="number" step="1" min="1" value="12" style="width:4em">
+        <label><input id="af-overwrite" type="checkbox" checked>覆盖已有格子</label></div>
+      <div class="row"><button id="btn-autofill" class="primary">自动填充</button></div>
+      <h4>草稿</h4>
+      <div class="row"><button id="btn-reload">重新加载已保存的草稿</button></div>
+      <p class="hint" id="draft-info"></p>
+    </div>
+
+    <div class="tab hidden" id="tab-meta">
+      <div class="row">类型 <select id="m-type"></select></div>
+      <div class="row">色卡 <input id="m-palette" list="palette-list" size="14"></div>
+      <div class="row tags" id="m-tags"></div>
+      <div class="row">其他标签 <input id="m-tags-extra" size="18" placeholder="逗号分隔"></div>
+      <div class="row">备注 <input id="m-notes" size="22"></div>
+      <h4>来源</h4>
+      <div id="m-source" class="kv"></div>
+      <h4>图片</h4>
+      <div id="m-images" class="kv"></div>
+      <h4>标注记录</h4>
+      <div id="m-label" class="kv"></div>
+    </div>
+  </aside>
+</div>
+
+<div id="help" class="modal hidden"><div class="box">
+  <h3>快捷键</h3>
+  <table class="keys">
+    <tr><td>G / B / F / I / S</td><td>网格 / 涂色 / 填充 / 吸管 / 取色</td></tr>
+    <tr><td>1–9</td><td>选最近用过的色号</td></tr>
+    <tr><td>E</td><td>画笔设为空格</td></tr>
+    <tr><td>/</td><td>输入色号（回车确定）</td></tr>
+    <tr><td>Alt+点击</td><td>吸管（涂色模式下）</td></tr>
+    <tr><td>Ctrl+Z / Ctrl+Y</td><td>撤销 / 重做（Ctrl+Shift+Z 也是重做）</td></tr>
+    <tr><td>Ctrl+S</td><td>立即保存草稿</td></tr>
+    <tr><td>H</td><td>只高亮画笔色号</td></tr>
+    <tr><td>T</td><td>格内文字开关</td></tr>
+    <tr><td>[ / ]</td><td>色块叠加透明度</td></tr>
+    <tr><td>N / Shift+N</td><td>下一个 / 上一个可疑格</td></tr>
+    <tr><td>X</td><td>把当前可疑格标为已处理</td></tr>
+    <tr><td>0</td><td>适应窗口</td></tr>
+    <tr><td>PageUp / PageDown</td><td>上一页 / 下一页</td></tr>
+    <tr><td>空格+拖动、右键或中键拖动</td><td>平移</td></tr>
+    <tr><td>滚轮</td><td>缩放</td></tr>
+    <tr><td>Shift+拖线</td><td>网格模式下只移动这一条线</td></tr>
+    <tr><td>L</td><td>任务列表开关</td></tr>
+  </table>
+  <div class="row"><button class="close">关闭</button></div>
+</div></div>
+
+<div id="dialog" class="modal hidden"><div class="box">
+  <div id="dialog-body"></div>
+  <div class="row"><button class="close">关闭</button></div>
+</div></div>
+
+<datalist id="code-list"></datalist>
+<datalist id="palette-list"></datalist>
+<script src="/static/app.js"></script>
+</body>
+</html>

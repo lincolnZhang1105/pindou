@@ -1,0 +1,93 @@
+code,name,r,g,b,series,transparent
+H01,White,229,236,241,H,0
+H02,Cream,228,228,197,H,0
+H03,Yellow,233,199,4,H,0
+H04,Orange,209,72,3,H,0
+H05,Red,180,6,14,H,0
+H06,Pink,234,138,165,H,0
+H07,Purple,113,34,151,H,0
+H08,Blue,2,57,163,H,0
+H09,Light Blue,2,91,195,H,0
+H10,Green,2,118,67,H,0
+H11,Light Green,25,205,167,H,0
+H12,Brown,62,39,26,H,0
+H13,Transparent Red,192,36,53,H,0
+H14,Transparent Yellow,228,170,50,H,0
+H16,Transparent Green,55,184,118,H,0
+H17,Grey,131,143,152,H,0
+H18,Black,20,19,21,H,0
+H19,Clear,216,210,206,H,0
+H20,Reddish Brown,141,42,15,H,0
+H21,Light Brown,190,108,33,H,0
+H22,Dark Red,145,2,10,H,0
+H24,Translucent Purple,104,62,154,H,0
+H25,Translucent Brown,135,89,61,H,0
+H26,Matt Rose,232,164,152,H,0
+H27,Beige,220,177,142,H,0
+H28,Dark Green,30,44,28,H,0
+H29,Claret,191,1,66,H,0
+H30,Burgundy,78,12,27,H,0
+H31,Turquoise,72,154,185,H,0
+H32,Neon Fuchsia,255,32,141,H,0
+H33,Cerise,255,57,86,H,0
+H34,Neon Yellow,229,239,19,H,0
+H35,Neon Red,255,40,51,H,0
+H36,Neon Blue,35,83,176,H,0
+H37,Neon Green,6,183,60,H,0
+H38,Neon Orange,253,134,0,H,0
+H39,Fluorescent Yellow,241,242,28,H,0
+H40,Fluorescent Orange,254,99,11,H,0
+H41,Fluorescent Blue,38,89,178,H,0
+H42,Fluorescent Green,12,189,81,H,0
+H43,Pastel Yellow,231,228,90,H,0
+H44,Pastel Red,249,97,96,H,0
+H45,Pastel Purple,142,105,205,H,0
+H46,Pastel Blue,81,174,228,H,0
+H47,Pastel Green,128,223,150,H,0
+H48,Pastel Pink,214,122,209,H,0
+H49,Azure,15,172,209,H,0
+H60,Teddybear Brown,240,152,30,H,0
+H70,Light Grey,165,179,192,H,0
+H71,Dark Grey,68,80,89,H,0
+H75,Tan,183,140,109,H,0
+H76,Nougat,138,89,55,H,0
+H77,Cloudy White,206,209,200,H,0
+H78,Light Peach,247,193,170,H,0
+H79,Apricot,248,118,51,H,0
+H82,Plum,145,23,90,H,0
+H83,Petrol Blue,3,122,159,H,0
+H84,Olive Green,104,120,54,H,0
+H95,Pastel Rose,221,155,163,H,0
+H96,Pastel Lilac,180,145,173,H,0
+H97,Pastel Ice Blue,138,175,194,H,0
+H98,Pastel Mint,148,204,164,H,0
+H15,Transparent Blue,72,126,213,H,0
+H55,Green (Glow in the Dark),250,248,237,H,0
+H56,Red (Glow in the Dark),237,191,159,H,0
+H57,Blue (Glow in the Dark),196,208,227,H,0
+H61,Gold,217,147,80,H,0
+H62,Silver,72,71,74,H,0
+H63,Bronze,66,49,47,H,0
+H64,Pearl,239,235,228,H,0
+H72,Translucent Pink,240,151,176,H,0
+H73,Translucent Aqua,89,174,245,H,0
+H74,Translucent Lilac,91,85,189,H,0
+H101,Eucalyptus,169,195,155,H,0
+H102,Forest Green,53,107,45,H,0
+H103,Light Yellow,255,230,96,H,0
+H104,Lime,188,209,34,H,0
+H105,Light Apricot,255,172,120,H,0
+H106,Light Lavender,204,197,237,H,0
+H107,Lavender,106,135,193,H,0
+H108,Aubergine,42,37,54,H,0
+H109,Cloudy Grey,138,132,127,H,0
+H110,Matcha,131,137,86,H,0
+H111,Dark Blush,131,88,84,H,0
+H112,Blush,173,138,130,H,0
+H113,Aqua,95,136,123,H,0
+H114,Cherry Red,154,44,49,H,0
+H115,Bright Green,110,151,95,H,0
+H116,Midnight Blue,34,40,56,H,0
+H117,Taupe Grey,119,113,105,H,0
+H118,Maroon Red,97,41,50,H,0
+H119,Sky Blue,65,103,180,H,0

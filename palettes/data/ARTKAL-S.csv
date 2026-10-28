@@ -1,0 +1,200 @@
+code,name,r,g,b,series,transparent
+S01,White,234,238,243,S,0
+S02,Burning Sand,238,146,124,S,0
+S03,Tangerine,255,166,48,S,0
+S04,Orange,235,96,39,S,0
+S05,Tall Poppy,203,53,49,S,0
+S06,Raspberry Pink,239,103,178,S,0
+S07,Gray,149,150,152,S,0
+S08,Emerald,31,196,103,S,0
+S09,Dark Green,0,104,94,S,0
+S10,Baby Blue,46,171,216,S,0
+S11,Dark Blue,0,79,164,S,0
+S12,Pastel Lavender,145,101,178,S,0
+S13,Black,41,42,43,S,0
+S14,Sandstorm,225,200,53,S,0
+S15,Redwood,154,69,65,S,0
+S16,Brown,101,70,61,S,0
+S17,Light Brown,137,93,73,S,0
+S18,Sand,220,163,132,S,0
+S19,Bubble Gun,242,191,184,S,0
+S20,Green,0,144,83,S,0
+S21,Pastel Green,139,178,58,S,0
+S22,Purple,72,51,126,S,0
+S23,Royal Purple,100,79,164,S,0
+S24,True Blue,0,120,191,S,0
+S25,Hot Pink,220,81,154,S,0
+S26,Magenta,218,67,131,S,0
+S27,Yellow,234,193,37,S,0
+S28,Lily Pink,221,161,204,S,0
+S29,Pastel Yellow,225,211,103,S,0
+S30,Shadow Green,158,201,205,S,0
+S31,Sea Mist,178,215,206,S,0
+S32,Beeswax,238,211,158,S,0
+S33,Maverick,192,183,215,S,0
+S34,Red,182,25,39,S,0
+S35,Mona Lisa,225,204,210,S,0
+S36,Old Pink,206,109,131,S,0
+S37,Blue-Green,96,191,203,S,0
+S38,Burgundy,163,19,74,S,0
+S39,Yellow Orange,230,135,57,S,0
+S40,Carnation Pink,225,130,176,S,0
+S41,Copper,157,91,46,S,0
+S42,Silver,103,107,115,S,0
+S43,Dark Gray,112,117,123,S,0
+S44,Sky Blue,167,205,222,S,0
+S45,Medium Turquoise,0,165,161,S,0
+S46,Bright Green,142,195,36,S,0
+S47,Marigold,178,121,56,S,0
+S48,Corn,236,192,61,S,0
+S49,Mulberry Wood,146,30,93,S,0
+S50,Mandys Pink,226,164,136,S,0
+S51,Spring Sun,223,218,189,S,0
+S52,Picasso,234,222,127,S,0
+S53,Turquoise,85,164,217,S,0
+S54,Light Blue,0,132,206,S,0
+S55,Pistachio,151,207,135,S,0
+S56,Bright Carrot,249,111,64,S,0
+S57,Buccaneer,179,85,64,S,0
+S58,Paprika,177,24,54,S,0
+S59,Butterfly Bush,79,57,137,S,0
+S60,Lavender,138,126,194,S,0
+S61,Key Lomen Pie,205,192,63,S,0
+S62,Green Tea,0,118,95,S,0
+S63,Metallic Gold,105,96,70,S,0
+S64,Black Rock,54,56,77,S,0
+S65,Canary,226,230,93,S,0
+S66,Blaze Orange,229,83,60,S,0
+S67,Vanilla,233,193,166,S,0
+S68,Tan,204,155,116,S,0
+S69,Mine Shaft,56,62,68,S,0
+S70,Drark Algae,173,173,41,S,0
+S71,Jade Green,0,125,43,S,0
+S72,Light Sea Blue,104,196,210,S,0
+S73,Steel Blue,90,176,191,S,0
+S74,Azure,0,158,194,S,0
+S75,Dark Steel Blue,0,132,178,S,0
+S76,Sea Blue,0,147,169,S,0
+S77,Ghost While,212,216,211,S,0
+S78,Ash Grey,194,196,194,S,0
+S79,Light Gray,167,172,173,S,0
+S80,Dark Olive,143,142,60,S,0
+S81,Deer,191,145,104,S,0
+S82,Clay,170,116,78,S,0
+S83,Sienna,187,104,51,S,0
+S84,Deep Chestnut,190,93,101,S,0
+S85,Red Wine,153,50,58,S,0
+S86,Goldenrod,232,174,0,S,0
+S87,Coral Red,236,98,94,S,0
+S88,Dark Pink,214,39,121,S,0
+S89,Charcoal Gray,86,90,94,S,0
+S90,Pastel Orange,217,179,94,S,0
+S91,Brunswick Green,21,56,56,S,0
+S92,Dandelion,206,164,51,S,0
+S93,Pale Skin,220,183,148,S,0
+S94,Warm Blush,221,146,133,S,0
+S95,Salmon,224,123,105,S,0
+S96,Apricot,239,127,97,S,0
+S97,Papaya,220,119,43,S,0
+S98,Himalaya Blue,106,174,219,S,0
+S99,Waterfall,97,187,211,S,0
+S100,Lagoon,39,155,190,S,0
+S101,Electric Blue,0,167,227,S,0
+S102,Pool Blue,0,119,202,S,0
+S103,Caribbian Blue,0,90,169,S,0
+S104,Deep Water,0,127,158,S,0
+S105,Petrol Blue,0,125,145,S,0
+S106,Wegdewood Blue,0,100,154,S,0
+S107,Pond Blue,0,108,159,S,0
+S108,Seashell Beige,207,193,121,S,0
+S109,Beige,196,174,100,S,0
+S110,Beach Beige,171,151,69,S,0
+S111,Caffe Latté,151,129,56,S,0
+S112,Oaktree Brown,144,124,65,S,0
+S113,Khaki,182,174,132,S,0
+S114,Light Greengray,165,159,101,S,0
+S115,Mossy Green,147,141,84,S,0
+S116,Earth Green,141,139,81,S,0
+S117,Sage Green,127,126,73,S,0
+S118,Pinetree Green,91,110,53,S,0
+S119,Frosty Blue,138,213,201,S,0
+S120,Polar Mint,124,210,165,S,0
+S121,Celadon Green,114,172,154,S,0
+S122,Eucalyptus,0,178,111,S,0
+S123,Clover Field,62,183,36,S,0
+S124,Pooltable Felt,13,117,53,S,0
+S125,Snake Green,0,125,110,S,0
+S126,Dark Eucalyptus,0,110,105,S,0
+S127,Marsmallow Rose,223,195,225,S,0
+S128,Light Grape,211,142,212,S,0
+S129,Rosebud Pink,213,166,186,S,0
+S130,Fuschia,214,102,142,S,0
+S131,Candy Violet,184,170,217,S,0
+S132,Flamingo,223,72,109,S,0
+S133,Pink Plum,188,60,166,S,0
+S134,Amethyst,128,56,151,S,0
+S135,Moonlight Blue,167,186,225,S,0
+S136,Summer Rain,175,184,223,S,0
+S137,Azur Blue,107,154,212,S,0
+S138,Cornflower Blue,90,137,206,S,0
+S139,Forget Me Not,101,138,208,S,0
+S140,Indigo,86,108,189,S,0
+S141,Horizon Blue,77,116,198,S,0
+S142,Cobolt,65,109,190,S,0
+S143,Royal Blue,48,66,158,S,0
+S144,Marine,2,66,136,S,0
+S145,Pale Yellow Moss,214,202,106,S,0
+S146,Bloodrose Red,157,26,56,S,0
+S147,Spearmint,128,183,161,S,0
+S148,Mocha,122,89,79,S,0
+S149,Creme,239,219,161,S,0
+S150,Iris Violet,136,132,208,S,0
+S151,Forrest Green,52,86,33,S,0
+S152,Lilac,174,173,220,S,0
+S153,Pale Lilac,188,195,225,S,0
+S154,Sahara Sand,227,192,154,S,0
+S155,Sunkissed Teint,197,139,96,S,0
+S156,Steel Grey,90,95,101,S,0
+S157,Iron Grey,76,81,86,S,0
+S158,Pepper,58,62,66,S,0
+S159,Oslo Gray,130,135,139,S,0
+SE1,Moon,241,244,250,SE,0
+SE2,Raincloud,162,178,211,SE,0
+SE3,Winter,131,166,220,SE,0
+SE4,Tide,112,216,237,SE,0
+SE5,Aquamarine,105,227,213,SE,0
+SE6,Neptune,42,99,200,SE,0
+SE7,Rose Quartz,213,174,201,SE,0
+SE8,Mauve,175,115,154,SE,0
+SE9,Dark Mauve,112,75,109,SE,0
+SE10,Wild Berry,217,119,205,SE,0
+SE11,Sugar Plum,182,67,172,SE,0
+SE12,Desert,222,177,129,SE,0
+SE13,Peanut,188,157,119,SE,0
+SE14,Toffee,172,127,93,SE,0
+SE15,Bark,163,126,102,SE,0
+SG1,Glow Yellow,198,192,180,SG,0
+SG2,Glow Pink,223,171,188,SG,0
+SG3,Glow Blue,111,173,193,SG,0
+SL1,Glitter Blue,54,135,178,SL,0
+SL2,Glitter Green,17,124,82,SL,0
+SL3,Glitter Red,194,41,51,SL,0
+SL4,Glitter Yellow,205,189,0,SL,0
+SN1,Neon Orange,255,116,5,SN,0
+SN2,Neon Green,1,198,62,SN,0
+SN3,Neon Yellow,242,243,60,SN,0
+SN4,Neon Rose,255,71,122,SN,0
+SP1,Pearlescent Green,147,202,135,SP,0
+SP2,Pearlescent Tangerine,254,127,84,SP,0
+SP3,Pearlescent Orange,240,161,73,SP,0
+SP4,Pearlescent Pink,220,158,169,SP,0
+SP5,Pearlescent Red,214,60,83,SP,0
+SP6,Pearlescent Blue,44,78,151,SP,0
+SP7,Pearlescent Purple,100,66,126,SP,0
+SP8,Pearlescent White,224,219,202,SP,0
+ST1,Transparent,199,188,184,ST,0
+ST2,Transparent Pink,249,84,152,ST,0
+ST3,Transparent Tangering,255,124,69,ST,0
+ST4,Transparent Yellow,218,223,61,ST,0
+ST5,Transparent Green,15,174,88,ST,0
+ST6,Transparent Purple,132,119,179,ST,0

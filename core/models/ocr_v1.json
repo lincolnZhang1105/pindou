@@ -1,0 +1,16 @@
+{
+ "name": "ocr_v1",
+ "charset": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZx-",
+ "blank": 0,
+ "input_h": 32,
+ "params": 405767,
+ "preprocess": "training/ocr/common.py:ink_crop",
+ "trained_on": "合成数据（training/ocr/gen.py，OFL 字体）",
+ "val": {
+  "acc": 0.9215,
+  "acc_code": 0.9085487077534792,
+  "acc_coord": 0.9322033898305084,
+  "acc_count": 0.9363166953528399
+ },
+ "step": 3500
+}

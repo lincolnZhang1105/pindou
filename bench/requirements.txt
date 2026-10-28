@@ -1,0 +1,11 @@
+# bench/ 与 training/ 的离线依赖（不进 App）。引入新依赖时在 docs/05 §6 登记。
+numpy>=2.0
+pillow>=11.0
+pyyaml>=6.0
+scipy>=1.13
+opencv-python-headless>=4.10
+colour-science>=0.4.6
+pytest>=8.0
+# 可选（不默认安装）：pillow-heif，bench.collect convert 解码 HEIC 用。源码 BSD-3-Clause，但二进制 wheel 捆绑 x265（GPL-2.0）
+# 和 libheif / libde265（LGPL-3.0），整体按 GPLv2 发布；只在 bench 本地用，不得进入 app/ core/ palettes/ backend/。
+# pillow-heif>=1.8

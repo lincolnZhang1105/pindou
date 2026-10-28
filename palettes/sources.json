@@ -1,0 +1,25 @@
+{
+  "_comment": "palettes/ 只收录来源可确认、许可允许商用的色卡（AGENTS 规则 1）。每一套的来源核实结论见 SOURCES.md。改动本文件后运行 python -m palettes.import_sources 和 python -m palettes.build_palettes。",
+  "upstreams": {
+    "beadcolors": {
+      "repo": "maxcleme/beadcolors",
+      "commit": "f97ff4283d03cef5cd7e1071a86f5892e0c0c61b",
+      "license": "MIT",
+      "raw_url": "https://raw.githubusercontent.com/maxcleme/beadcolors/{commit}/raw/{file}"
+    }
+  },
+  "palettes": [
+    {"id": "HAMA-MIDI",   "brand": "Hama",   "bead_mm": 5.0, "upstream": "beadcolors", "file": "hama.csv",        "derived_from_zippland": false},
+    {"id": "HAMA-MINI",   "brand": "Hama",   "bead_mm": 2.5, "upstream": "beadcolors", "file": "hama_mini.csv",   "derived_from_zippland": false},
+    {"id": "HAMA-MAXI",   "brand": "Hama",   "bead_mm": 10.0, "upstream": "beadcolors", "file": "hama_maxi.csv",  "derived_from_zippland": false},
+    {"id": "PERLER",      "brand": "Perler", "bead_mm": 5.0, "upstream": "beadcolors", "file": "perler.csv",      "derived_from_zippland": false},
+    {"id": "PERLER-MINI", "brand": "Perler", "bead_mm": 2.6, "upstream": "beadcolors", "file": "perler_mini.csv", "derived_from_zippland": false},
+    {"id": "NABBI",       "brand": "Nabbi",  "bead_mm": 5.0, "upstream": "beadcolors", "file": "nabbi.csv",       "derived_from_zippland": false},
+    {"id": "ARTKAL-A",    "brand": "Artkal", "bead_mm": 2.6, "upstream": "beadcolors", "file": "artkal_a.csv",    "derived_from_zippland": false},
+    {"id": "ARTKAL-C",    "brand": "Artkal", "bead_mm": 2.6, "upstream": "beadcolors", "file": "artkal_c.csv",    "derived_from_zippland": false},
+    {"id": "ARTKAL-M",    "brand": "Artkal", "bead_mm": 2.6, "upstream": "beadcolors", "file": "artkal_m.csv",    "derived_from_zippland": false},
+    {"id": "ARTKAL-R",    "brand": "Artkal", "bead_mm": 5.0, "upstream": "beadcolors", "file": "artkal_r.csv",    "derived_from_zippland": false},
+    {"id": "ARTKAL-S",    "brand": "Artkal", "bead_mm": 5.0, "upstream": "beadcolors", "file": "artkal_s.csv",    "derived_from_zippland": false},
+    {"id": "YANT",        "brand": "Yant",   "bead_mm": 5.0, "upstream": "beadcolors", "file": "yant.csv",        "derived_from_zippland": false}
+  ]
+}

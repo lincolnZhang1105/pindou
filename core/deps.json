@@ -1,0 +1,72 @@
+{
+  "_comment": "beadcore 的第三方依赖锁定表。由 core/scripts/fetch_deps.py 下载并校验 sha256。新增或升级依赖时，同步更新 docs/05 第 6 节的依赖登记表。",
+  "deps": {
+    "opencv": {
+      "version": "4.14.0",
+      "license": "Apache-2.0",
+      "url": "https://github.com/opencv/opencv/archive/refs/tags/4.14.0.tar.gz",
+      "sha256": "ee8fb9b30eb60850431b4656447080e3737b56e45719c92b67f245950609f86e",
+      "used_by": "core（只编 core、imgproc）"
+    },
+    "googletest": {
+      "version": "1.18.0",
+      "license": "BSD-3-Clause",
+      "url": "https://github.com/google/googletest/archive/refs/tags/v1.18.0.tar.gz",
+      "sha256": "6e3191c1455468b3fc35a417fb565c1c5071aee1b7e7f85e30cf48a98d37d8b5",
+      "used_by": "core/tests（不打包进 App）"
+    },
+    "nlohmann_json": {
+      "version": "3.12.0",
+      "license": "MIT",
+      "url": "https://github.com/nlohmann/json/releases/download/v3.12.0/json.hpp",
+      "sha256": "aaf127c04cb31c406e5b04a63f1ae89369fccde6d8fa7cdda1ed4f32dfc5de63",
+      "file": "nlohmann/json.hpp",
+      "used_by": "core（解析 palettes_json、pages_json，输出结果 JSON）"
+    },
+    "stb_image": {
+      "version": "003501f6d7a8668ce8b6d875e34dd97ad0d5d5b5",
+      "license": "MIT 或 Public Domain（二选一，取 MIT）",
+      "url": "https://raw.githubusercontent.com/nothings/stb/003501f6d7a8668ce8b6d875e34dd97ad0d5d5b5/stb_image.h",
+      "sha256": "594c2fe35d49488b4382dbfaec8f98366defca819d916ac95becf3e75f4200b3",
+      "file": "stb/stb_image.h",
+      "used_by": "core/cli（只在桌面 CLI 中解码 PNG/JPEG；App 里由平台层解码，见 03 §3.1）"
+    },
+    "stb_image_write": {
+      "version": "003501f6d7a8668ce8b6d875e34dd97ad0d5d5b5",
+      "license": "MIT 或 Public Domain（二选一，取 MIT）",
+      "url": "https://raw.githubusercontent.com/nothings/stb/003501f6d7a8668ce8b6d875e34dd97ad0d5d5b5/stb_image_write.h",
+      "sha256": "cbd5f0ad7a9cf4468affb36354a1d2338034f2c12473cf1a8e32053cb6914a05",
+      "file": "stb/stb_image_write.h",
+      "used_by": "core/cli（调试图输出）"
+    },
+    "libwebp": {
+      "version": "1.6.0",
+      "license": "BSD-3-Clause",
+      "url": "https://github.com/webmproject/libwebp/archive/refs/tags/v1.6.0.tar.gz",
+      "sha256": "93a852c2b3efafee3723efd4636de855b46f9fe1efddd607e1f42f60fc8f2136",
+      "used_by": "core/cli（只在桌面 CLI 中解码 WebP）"
+    },
+    "onnxruntime": {
+      "version": "1.31.1",
+      "license": "MIT",
+      "used_by": "core/src/nn（端侧推理）。桌面用官方预编译包；iOS/Android 在阶段 1 改用按模型裁剪算子的定制构建（03 §8）",
+      "platforms": {
+        "windows-x64-msvc": {
+          "url": "https://github.com/microsoft/onnxruntime/releases/download/v1.31.1/onnxruntime-win-x64-1.31.1.zip",
+          "sha256": "5869e26bb25314375f2d5ef1877e3ea06b1543d6c710e6e4a1ec2f7177ab4b2c",
+          "version": "1.31.1"
+        },
+        "linux-x64": {
+          "url": "https://github.com/microsoft/onnxruntime/releases/download/v1.31.1/onnxruntime-linux-x64-1.31.1.tgz",
+          "sha256": "c849e36a1ef3e22d4ff217b9d1ce4a3cf5b9467b975610913ae959ad5b16bdc9",
+          "version": "1.31.1"
+        },
+        "macos-arm64": {
+          "url": "https://github.com/microsoft/onnxruntime/releases/download/v1.31.1/onnxruntime-osx-arm64-1.31.1.tgz",
+          "sha256": "2e1344a1926ee50eb25b38153cb6992c3567515aef0e677a1a520a1798896d6f",
+          "version": "1.31.1"
+        }
+      }
+    }
+  }
+}

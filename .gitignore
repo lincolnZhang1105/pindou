@@ -1,0 +1,45 @@
+# 构建产物与依赖缓存
+/.deps/
+/build*/
+/core/build*/
+/out/
+*.o
+*.obj
+*.pdb
+
+# Python
+/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# ===== 版权与隐私：以下数据只能放在私有存储，禁止进入任何 git 仓库（AGENTS 规则 8）=====
+# 画师图纸样例（只供内部调试）
+/data/samples/*.png
+/data/samples/*.webp
+/data/samples/*.jpg
+# 小红书笔记正文与评论（含第三方用户内容，只用于需求分析）
+/data/xhs/
+# benchmark 图片、真值、预测结果一律在 $PINDOU_DATA_DIR 里，不在仓库内
+/bench/_local/
+*.bench-run/
+
+# 本地生成的合成数据和训练产物
+/training/runs/
+/training/data/
+/bench/synth/out/
+/palettes/build/
+/bench/palettes_unverified/build/
+
+# 合成数据生成器的字体二进制（按 bench/synth/fonts.lock.json 下载，不进 git）
+/bench/synth/fonts/
+
+# 本地编译和训练日志
+/*.log

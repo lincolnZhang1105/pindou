@@ -1,0 +1,68 @@
+# bench/eval 的评测参数（docs/04 §0、§3；docs/03 §3.6）。
+#
+# 改动以下 blurry / tau / flag_cap / scope / hard 任何一项，都会改变评测器参数指纹（config_sha256），
+# dev 集门禁基线（baselines/dev.json）随之失效，需要用 `gate --update` 重建。
+# bootstrap 和 gonogo 两节不进指纹（不影响确定性指标）。
+version: 1
+
+# ---------------------------------------------------------------- blurry 判定（04 §0.2）
+# 满足任一条即判为 blurry：
+#   1) 最小格边长 < min_cell_px（格边长取真值网格线的平均格距，每页、每个方向各算一次，取最小）；
+#   2) 图纸区域的拉普拉斯方差 < theta（灰度图，cv2.Laplacian(ksize=laplacian_ksize)，区域为真值网格线围成的矩形；分页图取各页最小值）。
+# 人工标注的 blurry 标签不参与 Hard 判定，只在报告里和规则结果对照。
+blurry:
+  min_cell_px: 8
+  # 占位值：W1 在 dev 集上用 `python -m bench.eval calibrate-theta` 标定后改成建议值，并把 theta_frozen 改为 true，之后冻结。
+  # theta_frozen 为 false 时评测器拒绝在 test 集上运行（Hard/Clean 的定义必须先冻结）。
+  theta: 100.0
+  theta_frozen: false
+  laplacian_ksize: 1
+
+# ---------------------------------------------------------------- τ（04 §5.1 ⑤）
+# 引擎把置信度低于 τ 的格子标为不确定。评测器只在预测结果没有 `uncertain` 字段、但有 `confidence` 时，
+# 用 confidence < tau 推出被标记的格子；有 `uncertain` 字段时一律以它为准。
+# 占位值：和 core 的 τ 保持一致，W1 在 dev 集上标定后冻结。
+tau: 0.5
+
+# ---------------------------------------------------------------- 不确定标记的上限（04 §0.1 第 3 条）
+# 每张图的上限 cap = min(floor(rate × 该图真值豆数), per_image_max)。
+# 引擎标记的格子数超过 cap 时，按 confidence 从低到高排序（相同时按格子编号升序；没有 confidence 时只按格子编号），
+# 只保留前 cap 个，再算召回率、精确率和标记率。逐图施加 2% 上限，整个数据集的标记率自然也 ≤ 2%。
+flag_cap:
+  rate: 0.02
+  per_image_max: 30
+
+# ---------------------------------------------------------------- 统计口径
+scope:
+  # 主统计池：第 1、2、4 条，网格正确率、每千颗错误数、零错误率等都只在这里统计（04 §0.2：T6、T7 单独报告）
+  main_excluded_types: [T6, T7]
+  # 第 3 条（不确定标记）和第 6 条（图例）的口径：全部 test 图纸，但 T7 不进入任何自动识别统计（04 §1.2）
+  flag_legend_excluded_types: [T7]
+
+# ---------------------------------------------------------------- Hard 集（04 §0.2）
+# 满足任一条件即为 Hard；主统计池里不是 Hard 的就是 Clean。
+hard:
+  size_buckets: [L, XL]
+  tags: [watermark, blurry]
+  types: [T4]
+
+# ---------------------------------------------------------------- bootstrap（04 §3）
+bootstrap:
+  n: 10000
+  seed: 20261027
+  confidence: 0.95
+  # 百分位法；重采样单位是「图纸」；随机数用 numpy.random.RandomState(seed)（流跨版本固定，结果可复现）
+
+# ---------------------------------------------------------------- go / no-go 门槛（04 §0.1）
+gonogo:
+  ratio_max: 0.5              # 第 1 条：我方每千颗错误数 ≤ 最强竞品 × 0.5，且配对差值 95% CI 下界 > 0
+  clean_per_mille_max: 1.0    # 第 2 条：Clean 集每千颗错误数 ≤ 1.0
+  flag_recall_min: 0.80       # 第 3 条（MVP 上线门槛，只报告）
+  grid_accuracy_min: 0.98     # 第 4 条：网格尺寸正确率 ≥ 98%
+  timing_ms_max: 3000         # 第 5 条（只报告；端侧实测见 T0.14）
+  legend_accuracy_min: 0.95   # 第 6 条（只报告）
+  hard_images_target: 80      # 04 §7 第 5 条：配对比较不显著时，Hard 图纸扩充到这个数再判定，而不是降低门槛
+
+# ---------------------------------------------------------------- dev 集门禁（03 §3.6）
+gate:
+  baseline: bench/eval/baselines/dev.json
