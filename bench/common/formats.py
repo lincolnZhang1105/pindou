@@ -16,7 +16,9 @@ import numpy as np
 
 REPO = Path(__file__).resolve().parents[2]
 DATASETS = REPO / "bench" / "datasets"
-MANIFEST = DATASETS / "manifest.jsonl"
+# 正式 benchmark 的 manifest 在仓库里。试用流程、给合成集做标注时用环境变量 PINDOU_MANIFEST 指到别处，
+# 免得试用数据混进正式 manifest（collect、label 都按它读写）
+MANIFEST = Path(os.environ["PINDOU_MANIFEST"]) if os.environ.get("PINDOU_MANIFEST") else DATASETS / "manifest.jsonl"
 
 TYPES = ("T1", "T2", "T3", "T4", "T5", "T6", "T7")
 SIZE_BUCKETS = ("S", "M", "L", "XL")

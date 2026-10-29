@@ -40,6 +40,8 @@ $PINDOU_DATA_DIR/
 
 CI 里只有 self-hosted runner 能挂载这份数据，凭据放在 CI secrets（03 §3.6）。
 
+试走流程、或给合成集做标注时，用环境变量 `PINDOU_MANIFEST` 把 manifest 指到仓库外的文件（`bench.collect`、`bench.label` 都按它读写），连同另一个 `PINDOU_DATA_DIR` 一起用，试用数据就不会混进正式的 `bench/datasets/manifest.jsonl`。
+
 ## 数据格式
 
 ### manifest（`bench/datasets/manifest.jsonl`，每行一张图）
