@@ -213,39 +213,114 @@ TEST(Grid, PeriodFromSpikeTrain) {
   EXPECT_NEAR(p, 13.0, 0.2);
 }
 
-// 分页图（B9）：一张图纸按 2×2 切成四页（页边带着被切开的半格），没有坐标时按九宫格版式拼回去
-TEST(Grid, PagedFourPiecesFallbackLayout) {
-  Spec s;
-  s.cols = 24;
-  s.rows = 20;
-  s.pitch = 18;
-  s.legend = false;
-  Truth t;
-  const cv::Mat full = render(s, t);
+namespace {
+
+// 把整张图纸（RGB）按列切点 cut_cs、行切点 cut_rs 切成若干页（按行优先排），页边多带 pad 像素的相邻半格
+std::vector<cv::Mat> cut_pages(const cv::Mat& full, const Spec& s, const std::vector<int>& cut_cs,
+                               const std::vector<int>& cut_rs, int pad) {
   auto X = [&](int i) { return static_cast<int>(std::floor(s.margin + i * s.pitch)); };
   auto Y = [&](int j) { return static_cast<int>(std::floor(s.margin + j * s.pitch)); };
-  const int cut_c = 12, cut_r = 10, pad = 7;  // 页边多带 7 像素：相邻页的半格
+  std::vector<int> xs{0}, ys{0};
+  for (int c : cut_cs) xs.push_back(X(c));
+  for (int r : cut_rs) ys.push_back(Y(r));
+  xs.push_back(full.cols);
+  ys.push_back(full.rows);
   std::vector<cv::Mat> pages;
-  for (int pr = 0; pr < 2; ++pr) {
-    for (int pc = 0; pc < 2; ++pc) {
-      const int x0 = pc == 0 ? 0 : X(cut_c) - pad, x1 = pc == 0 ? X(cut_c) + pad + 1 : full.cols;
-      const int y0 = pr == 0 ? 0 : Y(cut_r) - pad, y1 = pr == 0 ? Y(cut_r) + pad + 1 : full.rows;
-      cv::Mat rgba;
-      cv::cvtColor(full(cv::Rect(x0, y0, x1 - x0, y1 - y0)), rgba, cv::COLOR_RGB2RGBA);
-      pages.push_back(rgba.clone());
+  for (size_t pr = 0; pr + 1 < ys.size(); ++pr) {
+    for (size_t pc = 0; pc + 1 < xs.size(); ++pc) {
+      const int x0 = pc == 0 ? 0 : xs[pc] - pad, x1 = pc + 2 == xs.size() ? full.cols : xs[pc + 1] + pad + 1;
+      const int y0 = pr == 0 ? 0 : ys[pr] - pad, y1 = pr + 2 == ys.size() ? full.rows : ys[pr + 1] + pad + 1;
+      pages.push_back(full(cv::Rect(x0, y0, x1 - x0, y1 - y0)).clone());
     }
   }
+  return pages;
+}
+
+nlohmann::json run_pages(const std::vector<cv::Mat>& rgb_pages) {
+  std::vector<cv::Mat> rgba(rgb_pages.size());
   std::vector<bc_image> imgs;
-  for (const auto& p : pages) imgs.push_back({p.data, p.cols, p.rows, static_cast<int>(p.step)});
+  for (size_t k = 0; k < rgb_pages.size(); ++k) {
+    cv::cvtColor(rgb_pages[k], rgba[k], cv::COLOR_RGB2RGBA);
+    imgs.push_back({rgba[k].data, rgba[k].cols, rgba[k].rows, static_cast<int>(rgba[k].step)});
+  }
   bc_ctx* ctx = bc_create(nullptr, R"({"palettes":[]})", nullptr);
   char* out = bc_recognize(ctx, imgs.data(), static_cast<int>(imgs.size()), nullptr, nullptr, nullptr);
-  const auto j = nlohmann::json::parse(out);
+  auto j = nlohmann::json::parse(out);
   bc_free(out);
   bc_destroy(ctx);
+  return j;
+}
+
+void expect_pages_exact(const std::vector<cv::Mat>& pages, const Spec& s, const Truth& t) {
+  const auto j = run_pages(pages);
   ASSERT_FALSE(j.contains("error")) << j.dump();
   EXPECT_EQ(j["grid"]["cols"].get<int>(), s.cols);
   EXPECT_EQ(j["grid"]["rows"].get<int>(), s.rows);
   if (j["grid"]["cols"].get<int>() == s.cols && j["grid"]["rows"].get<int>() == s.rows) {
     EXPECT_EQ(cell_errors(j, t), 0);
   }
+}
+
+Spec paged_spec(int cols, int rows) {
+  Spec s;
+  s.cols = cols;
+  s.rows = rows;
+  s.pitch = 18;
+  s.legend = false;
+  return s;
+}
+
+}  // namespace
+
+// 分页图（B9）：一张图纸按 2×2 切成四页（页边带着被切开的半格），没有坐标时按九宫格版式拼回去
+TEST(Grid, PagedFourPiecesFallbackLayout) {
+  const Spec s = paged_spec(24, 20);
+  Truth t;
+  const cv::Mat full = render(s, t);
+  expect_pages_exact(cut_pages(full, s, {12}, {10}, 7), s, t);
+}
+
+// 接缝一侧没有留白：最后一条网格线离图片边缘只有两个像素（线响应只剩一半），每页都不能少一行或一列
+TEST(Grid, PagedSeamLineAtImageEdge) {
+  const Spec s = paged_spec(24, 20);
+  Truth t;
+  const cv::Mat full = render(s, t);
+  expect_pages_exact(cut_pages(full, s, {12}, {10}, 2), s, t);
+}
+
+// 2 列 × 3 行，各列宽度只差一格、各行高度不同、没有坐标：靠「同一行行数相同、同一列列数相同」排对
+//（以前按 ⌈√6⌉ = 3 张一行排）
+TEST(Grid, PagedSixPiecesLayoutFromPageShapes) {
+  const Spec s = paged_spec(23, 31);
+  Truth t;
+  const cv::Mat full = render(s, t);
+  expect_pages_exact(cut_pages(full, s, {12}, {10, 21}, 7), s, t);
+}
+
+// 图例单独成一页、而且是带格线的表格（每行「色块 | 色号 | 颗数」）：会被检测成一个格距很大的小网格，
+// 不能当成网格页参与拼接
+TEST(Grid, PagedLegendOnlyImageIsNotAGrid) {
+  const Spec s = paged_spec(24, 20);
+  Truth t;
+  const cv::Mat full = render(s, t);
+  auto pages = cut_pages(full, s, {12}, {10}, 7);
+  const int cell = 50, tc = 6, tr = 5, m = 30;
+  cv::Mat legend(2 * m + tr * cell, 2 * m + tc * cell, CV_8UC3, cv::Scalar(255, 255, 255));
+  for (int r = 0; r < tr; ++r) {
+    for (int c = 0; c < tc; ++c) {
+      const cv::Rect box(m + c * cell, m + r * cell, cell, cell);
+      const int item = r * 2 + c / 3;
+      if (c % 3 == 0) {
+        cv::rectangle(legend, box, kColors[item % 6], cv::FILLED);
+      } else {
+        const std::string txt = c % 3 == 1 ? "A" + std::to_string(item + 1) : "x" + std::to_string(10 + item);
+        cv::putText(legend, txt, cv::Point(box.x + 6, box.y + 32), cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(30, 30, 30), 1,
+                    cv::LINE_AA);
+      }
+    }
+  }
+  for (int c = 0; c <= tc; ++c) cv::line(legend, {m + c * cell, m}, {m + c * cell, m + tr * cell}, cv::Scalar(120, 120, 120), 1);
+  for (int r = 0; r <= tr; ++r) cv::line(legend, {m, m + r * cell}, {m + tc * cell, m + r * cell}, cv::Scalar(120, 120, 120), 1);
+  pages.push_back(legend);
+  expect_pages_exact(pages, s, t);
 }

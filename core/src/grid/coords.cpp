@@ -24,7 +24,7 @@ struct Hit {
   int cross;   // 数字中心所在的另一方向的 lattice 下标（列坐标 → 行号；行坐标 → 列号），-1 表示在网格外
 };
 
-// 一个方向（列或行）的拟合：index = number + k，k 取票数最多的值；数字只在 1..999 之间
+// 一个方向（列或行）的拟合：index = number + k，k 取票数最多的值；数字只在 0..999 之间（有的 App 坐标从 0 开始编号）
 CoordFit fit(const std::vector<Hit>& hits, std::vector<int>* inlier_cross = nullptr) {
   CoordFit f;
   std::map<int, int> votes;
@@ -55,7 +55,7 @@ CoordFit fit(const std::vector<Hit>& hits, std::vector<int>* inlier_cross = null
   f.first = lo + best_k;
   f.last = hi + best_k;
   f.dense = nums.size() >= 0.6 * (hi - lo + 1) && lo <= 2;
-  // 坐标从 1 开始；如果最小只读到 2，也认为第一格是 1
+  // 坐标通常从 1 开始；如果最小只读到 2，也认为第一格是 1（从 0 开始的坐标，最小值就是 0，不受影响）
   if (f.dense && lo == 2) f.first = 1 + best_k;
   // 只有连续、逐格标注的坐标序列才拿来判断「坐标行」（零星读到的数字可能是格子里的色号）
   if (inlier_cross && f.dense) *inlier_cross = cross;
@@ -136,7 +136,7 @@ CoordResult read_coords(const nn::OcrModel& ocr, const cv::Mat& gray, int page_b
                             std::to_string(w.width) + "x" + std::to_string(w.height) + "=" + t.text);
       }
       const auto n = parse_int(t.text);
-      if (!n || *n < 1 || *n > 999) continue;
+      if (!n || *n < 0 || *n > 999) continue;
       // 数字中心所在的 lattice 行 / 列（不要求对齐到中心）
       auto cell_of = [](const std::vector<double>& l, double v) {
         for (size_t i = 0; i + 1 < l.size(); ++i) {

@@ -10,6 +10,7 @@
 #include <optional>
 #include <queue>
 #include <set>
+#include <tuple>
 
 #include "classify/assign.h"
 #include "classify/cells.h"
@@ -52,7 +53,8 @@ struct PageResult {
   LegendResult legend;
   color::RGB8 page_bg{};
   int col_offset = 0, row_offset = 0;
-  int abs_col0 = 0, abs_row0 = 0;  // 坐标数字给出的第一列 / 第一行的编号（从 1 开始；0 表示不知道）
+  // 坐标数字给出的第一列 / 第一行的编号；-1 表示不知道。编号可能从 0 开始也可能从 1 开始，只用来算页与页的相对位置
+  int abs_col0 = -1, abs_row0 = -1;
   bool legend_only = false;         // 多图输入里只有图例、没有网格的那张
   int cols() const { return std::max(0, static_cast<int>(xs.size()) - 1); }
   int rows() const { return std::max(0, static_cast<int>(ys.size()) - 1); }
@@ -278,8 +280,8 @@ ojson recognize(const Context& ctx, const RecognizeRequest& req, const Progress&
           adopt(cr.cols, c0, c1, static_cast<int>(lx.size()), cr.cols_with_word);
           adopt(cr.rows, r0, r1, static_cast<int>(ly.size()), cr.rows_with_word);
           // 分页图拼接用：这一页第一列 / 第一行的坐标编号
-          if (cr.cols.ok && c0 - cr.cols.k >= 1) pr.abs_col0 = c0 - cr.cols.k;
-          if (cr.rows.ok && r0 - cr.rows.k >= 1) pr.abs_row0 = r0 - cr.rows.k;
+          if (cr.cols.ok && c0 - cr.cols.k >= 0) pr.abs_col0 = c0 - cr.cols.k;
+          if (cr.rows.ok && r0 - cr.rows.k >= 0) pr.abs_row0 = r0 - cr.rows.k;
           pr.xs.assign(lx.begin() + c0, lx.begin() + c1 + 2);
           pr.ys.assign(ly.begin() + r0, ly.begin() + r1 + 2);
           if (g_debug) {
@@ -323,6 +325,31 @@ ojson recognize(const Context& ctx, const RecognizeRequest& req, const Progress&
   }
   timing["grid"] = std::lround(ms_since(t));
 
+  // 分页图里单独的图例页：色块排得整齐时也会被认成一个小网格。同一套分页图来自同一次导出，各页格距基本一致；
+  // 格数很少（≤ 100）、格距又和其他网格页的中位数差 1.6 倍以上的，按图例页处理（板边角的小页格距和别的页一样，不受影响）
+  if (!req.pages && n_img > 1) {
+    auto pitch_of = [](const PageResult& p) { return std::max(p.grid.pitch_x, p.grid.pitch_y); };
+    std::vector<size_t> flip;
+    for (size_t a = 0; a < pages.size(); ++a) {
+      if (pages[a].legend_only || pages[a].cols() * pages[a].rows() > 100) continue;
+      std::vector<double> others;
+      for (size_t b = 0; b < pages.size(); ++b) {
+        if (b != a && !pages[b].legend_only) others.push_back(pitch_of(pages[b]));
+      }
+      if (others.empty()) continue;
+      std::nth_element(others.begin(), others.begin() + others.size() / 2, others.end());
+      const double r = pitch_of(pages[a]) / others[others.size() / 2];
+      if (r > 1.6 || r < 1 / 1.6) flip.push_back(a);
+    }
+    for (size_t a : flip) {
+      pages[a].legend_only = true;
+      pages[a].xs.clear();
+      pages[a].ys.clear();
+      pages[a].exclude = cv::Rect();
+      pages[a].abs_col0 = pages[a].abs_row0 = -1;
+      if (g_debug) debug["grid"][pages[a].image_index]["reclassified_legend_page"] = true;
+    }
+  }
   // 多页（B9）：网格页排在前面，图例页放后面
   std::stable_partition(pages.begin(), pages.end(), [](const PageResult& p) { return !p.legend_only; });
   require(!pages.empty() && !pages.front().legend_only, BC_ERR_NO_GRID_FOUND, "所有图片都没有找到网格");
@@ -332,7 +359,7 @@ ojson recognize(const Context& ctx, const RecognizeRequest& req, const Progress&
     bool by_coords = true;
     int min_c = 1 << 30, min_r = 1 << 30;
     for (int k = 0; k < n_grid; ++k) {
-      by_coords &= pages[k].abs_col0 > 0 && pages[k].abs_row0 > 0;
+      by_coords &= pages[k].abs_col0 >= 0 && pages[k].abs_row0 >= 0;
       min_c = std::min(min_c, pages[k].abs_col0);
       min_r = std::min(min_r, pages[k].abs_row0);
     }
@@ -350,7 +377,12 @@ ojson recognize(const Context& ctx, const RecognizeRequest& req, const Progress&
         pages[k].row_offset = pages[k].abs_row0 - min_r;
       }
     } else {
-      // 2) 按版式猜：张数是平方数按 s×s 排（九宫格）；行数都相同排成一行；列数都相同排成一列；否则按 ⌈√n⌉ 列排
+      // 2) 按版式猜：枚举每行放几张（per_row），先纯按累加摆放，挑最自洽的一种：
+      //    a. 读出了坐标的页：「坐标编号 − 摆放位置」应该是同一个常数（列、行分别算，允许 ±2），不一致的页越少越好
+      //       （分页图常常只在整张图纸的外框上标坐标：最上一排页有列号、最左一列页有行号）；
+      //    b. 同一张大图切出来的页，同一行的行数相同、同一列的列数相同：每对相同 +1、不同 −1，分越高越好；
+      //    c. 打平时按经验顺序（prior）：列坐标回到最小值处断行、按板切、平方数排成 s×s、
+      //       行数都相同排成一行、列数都相同排成一列、⌈√n⌉ 张一行；其余按离 √n 的远近
       int per_row = n_grid;
       const int s = static_cast<int>(std::lround(std::sqrt(double(n_grid))));
       const bool same_rows = std::all_of(pages.begin(), pages.begin() + n_grid, [&](const PageResult& p) { return p.rows() == pages[0].rows(); });
@@ -370,7 +402,7 @@ ojson recognize(const Context& ctx, const RecognizeRequest& req, const Progress&
         int min_known = 1 << 30;
         for (int k = 0; k < n_grid; ++k) {
           const int a = pages[k].abs_col0;
-          if (a <= 0) continue;
+          if (a < 0) continue;
           if (k > 0 && min_known < (1 << 30) && a <= min_known) {
             coord_break = k;
             break;
@@ -378,43 +410,137 @@ ojson recognize(const Context& ctx, const RecognizeRequest& req, const Progress&
           min_known = std::min(min_known, a);
         }
       }
+      int prior = 0;
       if (coord_break > 0) {
-        per_row = coord_break;
+        prior = coord_break;
       } else if (board_break > 1) {
-        per_row = board_break;
+        prior = board_break;
       } else if (s * s == n_grid) {
-        per_row = s;
+        prior = s;
       } else if (same_rows) {
-        per_row = n_grid;
+        prior = n_grid;
       } else if (same_cols) {
-        per_row = 1;
+        prior = 1;
       } else {
-        per_row = static_cast<int>(std::ceil(std::sqrt(double(n_grid))));
+        prior = static_cast<int>(std::ceil(std::sqrt(double(n_grid))));
       }
-      // 已经读出坐标的页按坐标放（以同一行 / 同一列里读出了坐标的页为基准），其余按累加补位
-      int known_c = 1 << 30, known_r = 1 << 30;
-      for (int k = 0; k < n_grid; ++k) {
-        if (pages[k].abs_col0 > 0) known_c = std::min(known_c, pages[k].abs_col0);
-        if (pages[k].abs_row0 > 0) known_r = std::min(known_r, pages[k].abs_row0);
+      // 纯按累加摆放
+      auto stack = [&](int pr_n, std::vector<int>& co, std::vector<int>& ro) {
+        co.assign(n_grid, 0);
+        ro.assign(n_grid, 0);
+        int row_off = 0;
+        for (int start = 0; start < n_grid; start += pr_n) {
+          int col_off = 0, band = 0;
+          for (int k = start; k < std::min(n_grid, start + pr_n); ++k) {
+            co[k] = col_off;
+            ro[k] = row_off;
+            col_off += pages[k].cols();
+            band = std::max(band, pages[k].rows());
+          }
+          row_off += band;
+        }
+      };
+      auto abs_of = [&](int k, bool col) { return col ? pages[k].abs_col0 : pages[k].abs_row0; };
+      // 「坐标编号 − 累加位置」应是同一个常数。某一页尺寸差一两格会让后面的累加位置漂移，所以允许 ±2：
+      // 取覆盖页数最多的常数（打平取先出现的）。返回 (常数, 不在误差内的页数)；没有页读出坐标时是 (0, 0)
+      auto coord_fit = [&](bool col, const std::vector<int>& off) {
+        std::vector<int> d;
+        for (int k = 0; k < n_grid; ++k) {
+          if (abs_of(k, col) >= 0) d.push_back(abs_of(k, col) - off[k]);
+        }
+        int base = 0, best = 0;
+        for (int x : d) {
+          const int c = static_cast<int>(std::count_if(d.begin(), d.end(), [&](int y) { return std::abs(y - x) <= 2; }));
+          if (c > best) {
+            best = c;
+            base = x;
+          }
+        }
+        return std::make_pair(base, static_cast<int>(d.size()) - best);
+      };
+      // 页面形状：同一行的页行数相同、同一列的页列数相同，每对相同 +1、不同 −1。
+      // 只数「不同」的话，一整行排开这种比较次数很少的排法会占便宜
+      auto shape_score = [&](int pr_n) {
+        int score = 0;
+        for (int start = 0; start < n_grid; start += pr_n) {
+          for (int k = start + 1; k < std::min(n_grid, start + pr_n); ++k) score += pages[k].rows() == pages[start].rows() ? 1 : -1;
+        }
+        for (int j = 0; j < pr_n; ++j) {
+          for (int k = j + pr_n; k < n_grid; k += pr_n) score += pages[k].cols() == pages[j].cols() ? 1 : -1;
+        }
+        return score;
+      };
+      std::vector<int> cands{prior};
+      for (int c = 1; c <= n_grid; ++c) {
+        if (c != prior) cands.push_back(c);
       }
+      const double sq = std::sqrt(double(n_grid));
+      std::stable_sort(cands.begin() + 1, cands.end(), [&](int a, int b) { return std::fabs(a - sq) < std::fabs(b - sq); });
+      std::tuple<int, int, int> best_key{1 << 30, 1 << 30, 1 << 30};
+      for (int rank = 0; rank < static_cast<int>(cands.size()); ++rank) {
+        std::vector<int> co, ro;
+        stack(cands[rank], co, ro);
+        const std::tuple<int, int, int> key{coord_fit(true, co).second + coord_fit(false, ro).second,
+                                            -shape_score(cands[rank]), rank};
+        if (key < best_key) {
+          best_key = key;
+          per_row = cands[rank];
+        }
+      }
+      if (g_debug) debug["b9_layout"] = {{"per_row", per_row}, {"prior", prior}, {"coord_bad", std::get<0>(best_key)},
+                                         {"shape_score", -std::get<1>(best_key)}};
+      // 摆放：读出了坐标的页直接按自己的坐标放（编号 − 基准），不受别的页尺寸误差影响；其余按累加补位。
+      // 基准取第一行（行坐标）/ 第一列（列坐标）里读出了坐标的页：它们的累加位置一定是 0。这些页都没读出来时，
+      // 用和累加位置最吻合的常数
+      std::vector<int> co, ro;
+      stack(per_row, co, ro);
+      auto most_common = [](const std::map<int, int>& m) {
+        int v = 0, best = 0;
+        for (const auto& [x, c] : m) {
+          if (c > best) {
+            best = c;
+            v = x;
+          }
+        }
+        return v;
+      };
+      auto base_of = [&](bool col) {
+        std::map<int, int> anchors;
+        for (int k = 0; k < n_grid; ++k) {
+          const bool first = col ? k % per_row == 0 : k < per_row;
+          if (first && abs_of(k, col) >= 0) ++anchors[abs_of(k, col)];
+        }
+        return anchors.empty() ? coord_fit(col, col ? co : ro).first : most_common(anchors);
+      };
+      const int base_c = base_of(true), base_r = base_of(false);
+      auto placed = [&](int k, bool col) { return abs_of(k, col) - (col ? base_c : base_r); };
       int row_off = 0;
       for (int start = 0; start < n_grid; start += per_row) {
-        int col_off = 0, band = 0;
-        int band_row = -1;
-        for (int k = start; k < std::min(n_grid, start + per_row); ++k) {
-          if (pages[k].abs_row0 > 0 && known_r < (1 << 30)) band_row = pages[k].abs_row0 - known_r;
+        const int end = std::min(n_grid, start + per_row);
+        // 这一行的起始行：行里读出了行坐标的页给出的位置（取最常见的），没有就接着上一行往下排
+        std::map<int, int> rows_known;
+        for (int k = start; k < end; ++k) {
+          if (abs_of(k, false) >= 0 && placed(k, false) >= 0) ++rows_known[placed(k, false)];
         }
-        if (band_row >= 0) row_off = band_row;
-        for (int k = start; k < std::min(n_grid, start + per_row); ++k) {
-          if (pages[k].abs_col0 > 0 && known_c < (1 << 30)) col_off = pages[k].abs_col0 - known_c;
+        if (!rows_known.empty()) row_off = most_common(rows_known);
+        int col_off = 0, band_end = row_off;
+        for (int k = start; k < end; ++k) {
+          if (abs_of(k, true) >= 0 && placed(k, true) >= 0) col_off = placed(k, true);
           pages[k].col_offset = col_off;
-          pages[k].row_offset = row_off;
+          pages[k].row_offset = abs_of(k, false) >= 0 && placed(k, false) >= 0 ? placed(k, false) : row_off;
           col_off += pages[k].cols();
-          band = std::max(band, pages[k].rows());
+          band_end = std::max(band_end, pages[k].row_offset + pages[k].rows());
         }
-        row_off += band;
+        row_off = band_end;
       }
       warnings.push_back("pages_order_unverified");
+    }
+  }
+  if (g_debug && n_grid > 1) {
+    for (int k = 0; k < n_grid; ++k) {
+      debug["b9"].push_back({{"image_index", pages[k].image_index}, {"abs_col0", pages[k].abs_col0},
+                             {"abs_row0", pages[k].abs_row0}, {"cols", pages[k].cols()}, {"rows", pages[k].rows()},
+                             {"col_offset", pages[k].col_offset}, {"row_offset", pages[k].row_offset}});
     }
   }
   int cols = 0, rows = 0;

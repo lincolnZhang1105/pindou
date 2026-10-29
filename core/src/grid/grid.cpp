@@ -254,18 +254,23 @@ std::vector<double> track_lines(const std::vector<double>& prof, double p) {
     int misses = 0;
     while (true) {
       const double pred = pos + dir * cur_p * (misses + 1);
-      const int lo = static_cast<int>(std::floor(pred - 0.22 * p)), hi = static_cast<int>(std::ceil(pred + 0.22 * p));
-      if (lo < 1 || hi >= n - 1) break;
+      // 预测位置出了图片才停。分页图在接缝一侧、贴边裁的截图，最后一条线离图片边缘只有一两个像素，
+      // 搜索窗口会越界：把窗口裁到图片里继续找，被裁的那一端改成要求峰值是局部极大
+      if (pred < 0 || pred > n - 1) break;
+      const int lo0 = static_cast<int>(std::floor(pred - 0.22 * p)), hi0 = static_cast<int>(std::ceil(pred + 0.22 * p));
+      const int lo = std::max(lo0, 1), hi = std::min(hi0, n - 2);
+      if (hi - lo < 2) break;
       int b = lo;
       for (int i = lo; i <= hi; ++i) {
         if (s[i] > s[b]) b = i;
       }
+      const bool peak_in_window = (b > lo || (lo > lo0 && s[b] >= s[b - 1])) && (b < hi || (hi < hi0 && s[b] >= s[b + 1]));
       std::vector<double> last(recent.end() - std::min<size_t>(recent.size(), 8), recent.end());
       const double ref = median_of(last);
       // 强线：≥ 参考强度的 30%；弱线（大片空格里很淡的线）：≥ 10% 且峰值正好落在预测位置附近
       const bool strong = s[b] >= 0.3 * ref;
       const bool weak = s[b] >= 0.1 * ref && std::fabs(b - pred) <= 0.15 * p;
-      if ((strong || weak) && s[b] > 0 && b > lo && b < hi) {
+      if ((strong || weak) && s[b] > 0 && peak_in_window) {
         const double np = parabolic(s, b);
         const double step = std::fabs(np - pos) / (misses + 1);
         cur_p = std::clamp(0.8 * cur_p + 0.2 * step, 0.97 * p, 1.03 * p);
@@ -433,13 +438,27 @@ GridResult detect_grid(const cv::Mat& rgb, const cv::Mat& gray, const Progress& 
       for (int dir : {-1, +1}) {
         const double end = dir < 0 ? L.front() : L.back();
         const double pred = end + dir * step;
-        const int lo = static_cast<int>(std::floor(pred - 0.25 * step)), hi = static_cast<int>(std::ceil(pred + 0.25 * step));
-        if (lo < 1 || hi >= n - 1) continue;
+        if (pred < 0 || pred > n - 1) continue;
+        // 和 track_lines 一样，窗口越界时裁到图片里（台阶边缘投影在 [1, n-2] 上有定义）
+        const int lo = std::max(1, static_cast<int>(std::floor(pred - 0.25 * step)));
+        const int hi = std::min(n - 2, static_cast<int>(std::ceil(pred + 0.25 * step)));
+        if (hi < lo) continue;
         int best = lo;
         for (int q = lo; q <= hi; ++q) {
           if (edge[q] > edge[best]) best = q;
         }
         if (edge[best] < 0.5 * ref) continue;
+        // 网格线压在图片边缘上（分页图的接缝、贴边裁的截图）：线只剩靠里的一半，线响应读不出来，只有台阶边缘。
+        // 这时这一条格子是完整的一格，空白也算；网格外留了白边时预测位置上没有台阶边缘，走不到这里
+        const bool at_border = dir < 0 ? pred - 0.35 * step <= 0 : pred + 0.35 * step >= n - 1;
+        if (at_border) {
+          if (dir < 0) {
+            L.insert(L.begin(), best);
+          } else {
+            L.push_back(best);
+          }
+          continue;
+        }
         // 新加的这一条格子：大多数不是页面底色
         int colored = 0, total = 0;
         for (size_t k = 0; k + 1 < other.size(); ++k) {

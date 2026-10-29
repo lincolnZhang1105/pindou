@@ -16,7 +16,7 @@ struct CoordFit {
   int first = 0, last = 0;  // 坐标指出的网格范围（lattice 的格子下标，闭区间）
   int support = 0;          // 支持这个拟合的坐标数字个数
   bool dense = false;       // 坐标是逐格标的（不是每 5 格一个）
-  int k = 0;                // lattice 格子下标 = 坐标数字 + k（坐标从 1 开始，所以下标 i 处的坐标是 i - k）
+  int k = 0;                // lattice 格子下标 = 坐标数字 + k（下标 i 处的坐标是 i - k；坐标可能从 0 或 1 开始）
 };
 
 struct CoordResult {
