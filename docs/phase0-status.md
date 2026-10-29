@@ -1,4 +1,4 @@
-# 阶段 0 进展与交接（截至 2026-10-28）
+# 阶段 0 进展与交接（截至 2026-10-29）
 
 > 写给产品负责人（PO）。任务编号见 `07`，指标定义见 `04`。本文随进展更新。
 
@@ -7,7 +7,8 @@
 - **工具链已经齐了**：采集、标注、评测、合成数据、识别引擎、benchmark runner，都能端到端跑通。
 - **真实数据还是空的**：阶段 0 的 go/no-go 结论要等 PO 采集、标注 dev 和 test 集，并测完竞品。
 - 现有的 4 张真实图纸样例，引擎能**全部识别正确**：网格尺寸、每个色号、每个颗数都对，「与图例完全一致」。
-- 在难度更大的合成集上还有明显差距，见第 3 节。
+- 在难度更大的合成集上还有明显差距，见第 3 节。合成集上的调优已暂停，等真实 dev 集（第 5 节）。
+- **现在卡在第 4 节的 PO 事项上**，最关键的是第 2 项：采集和标注。
 
 ## 2. 任务状态
 
@@ -51,11 +52,26 @@
 7. **ONNX Runtime 的遥测**：官方构建默认会把数据上报给微软。App 必须用 `--no_telemetry` 编译的版本（已写进 03、05、06）。这是工程约束，不需要拍板，但上线检查时要核对。
 8. **合成 T6（拍照）的真值格式**：给 page 加了 `homography` 等字段，暂定只在合成数据里用，见 `bench/README.md`。
 
-## 5. AI 接下来要做的（不受阻塞）
+## 5. AI 接下来要做的
 
-- T0.8：dev 集标好后跑 `python -m bench.competitors.pindo run --split dev --run pindo-4ae3613 --white-as-empty` 并出报告；test 集只在 W2 跑一次。
-- T0.12 余下部分：不确定格的置信度标定（召回 ≥ 80% 的门槛要用 dev 集标定，等真实数据）；格距很小（≤ 8 px）时的坐标栏、网格行方向整体偏半格，先看真实 dev 集里多不多再决定。
-- 大图和模糊图的网格检测：合成集上剩下的主要失败类型。
+**2026-10-29 决定：合成集上的调优先暂停。**
+- 合成集上剩下的失败合成痕迹越来越重：格距 ≤ 8 px 的坐标栏、个别图行方向网格整体偏半格、圆形豆子的分页样式。继续针对它们调阈值，容易把引擎调得只适合合成集。
+- 等真实 dev 集标好，按真实图纸的失败分布再定先修什么。
+
+目前 AI 这边没有不受阻塞的大块工作，都在等第 4 节的事项。**dev 集标好后按这个顺序做**（命令细节见 `bench/eval/README.md`）：
+
+1. **跑我方引擎并出报告**：
+   - `python -m bench.engine run --split dev --run beadcore-v1`
+   - `python -m bench.eval run --preds beadcore-v1 --split dev`
+2. **标定**：
+   - θ：`python -m bench.eval calibrate-theta`；
+   - 不确定格的置信度：在标记率上限内召回 ≥ 80%，T0.12 的剩余部分。
+3. **建门禁基线**：`python -m bench.eval gate --preds beadcore-v1 --update`。之后每次改识别都要过 dev 门禁（AGENTS 规则 3）。
+4. **Pindo baseline（T0.8）**：
+   - `python -m bench.competitors.pindo run --split dev --run pindo-4ae3613 --white-as-empty`
+   - 再用 `bench.eval run` 出报告。
+5. **按 dev 集的失败分布排修复优先级**。上面暂停的几类问题，在那时一起评估。
+6. **W2**：test 集上只跑一次 Pindo baseline（`--test-reason baseline_w2`）。我方引擎的 test 集评测只在阶段冻结时做一次（`final_w6`）。
 
 ## 6. 真机测速怎么跑（T0.14）
 
