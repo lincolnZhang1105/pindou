@@ -23,11 +23,14 @@ struct GridResult {
   double seg_threshold = 0;
   double period9 = 0, period3 = 0;  // 调试：两种腐蚀长度各自估出的格距
   bool header_stripped[4] = {false, false, false, false};  // 上、下、左、右坐标栏
+  // 最外一圈像坐标栏（底色一致、几乎每格有字），只是字形对比分不开：三位数坐标在小格子里和同一色号连成一排很像。
+  // 交给有 OCR 的引擎判断是不是一串连续的数字（上、下、左、右）
+  bool header_candidate[4] = {false, false, false, false};
   double frame_fill = 0;                                   // 网格范围内「四边有线」格子的比例
   std::vector<cv::Rect> components;                        // 有线格子的连通块（像素坐标，按面积降序）
-  std::vector<std::string> border_map;
-  std::vector<std::string> header_debug;
-  std::vector<std::string> comb_debug;  // 调试：各候选格距的梳子检验结果  // 调试：坐标栏判断的统计（上、下、左、右，每轮 4 条）  // 调试：每个 lattice 格子有几条边有线（0–4），每行一个字符串
+  std::vector<std::string> border_map;    // 调试：每个 lattice 格子有几条边有线（0–4），每行一个字符串
+  std::vector<std::string> header_debug;  // 调试：坐标栏判断的统计（上、下、左、右，每轮 4 条）
+  std::vector<std::string> comb_debug;    // 调试：各候选格距的梳子检验结果
 
   int cols() const { return xs.empty() ? 0 : static_cast<int>(xs.size()) - 1; }
   int rows() const { return ys.empty() ? 0 : static_cast<int>(ys.size()) - 1; }

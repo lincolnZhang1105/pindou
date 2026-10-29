@@ -161,6 +161,42 @@ std::optional<int> read_count(const nn::OcrModel& m, const cv::Mat& gray, const 
   return parse_count(nn::read_text(m, gray, box).text);
 }
 
+// 一排格子里写的是不是一串连续的数字（坐标栏）。每格贪心读一次，读成整数的格子投票定起始编号
+// （递增：编号 − 序号；递减：编号 + 序号），再用 CTC 检验每格是不是「起始编号 ± 序号」：
+// 和贪心结果的概率差在 e^3 倍以内就算通过。坐标栏的字常常很小（格距 12 像素时三位数只有 4 像素高），
+// OCR 只能读对一半左右，所以要求：至少 4 格投出同一个起始编号，且 45% 以上的格子通过检验。
+// 同一色号连成一排时每格读到的数字相同，投不出一致的起始编号（纯数字色号的品牌也一样）
+bool is_number_run(const nn::OcrModel& m, const cv::Mat& gray, const std::vector<cv::Rect>& boxes, std::string* why) {
+  if (boxes.size() < 5) return false;
+  std::vector<nn::OcrText> reads;
+  std::map<int, int> up, down;
+  for (size_t k = 0; k < boxes.size(); ++k) {
+    reads.push_back(nn::read_text(m, gray, boxes[k]));
+    const std::string& s = reads.back().text;
+    if (s.empty() || s.size() > 3 || !std::all_of(s.begin(), s.end(), [](char c) { return c >= '0' && c <= '9'; })) continue;
+    const int v = std::stoi(s), kk = static_cast<int>(k);
+    ++up[v - kk];
+    ++down[v + kk];
+  }
+  int best = 0, base = 0, dir = 0;
+  for (const auto& [b, c] : up) {
+    if (c > best) best = c, base = b, dir = +1;
+  }
+  for (const auto& [b, c] : down) {
+    if (c > best) best = c, base = b, dir = -1;
+  }
+  if (why) *why = "votes=" + std::to_string(best) + "/" + std::to_string(boxes.size());
+  if (best < 4) return false;
+  int pass = 0;
+  for (size_t k = 0; k < boxes.size(); ++k) {
+    const int v = base + dir * static_cast<int>(k);
+    if (v < 0) continue;
+    pass += nn::ctc_logprob(reads[k], m.charset, std::to_string(v)) >= reads[k].logp - 3.0;
+  }
+  if (why) *why += " pass=" + std::to_string(pass);
+  return pass >= 0.45 * boxes.size();
+}
+
 }  // namespace
 
 void set_debug(bool on) { g_debug = on; }
@@ -242,6 +278,36 @@ ojson recognize(const Context& ctx, const RecognizeRequest& req, const Progress&
       pr.ys = pr.grid.ys;
       // 坐标数字（有 OCR 时）：去掉坐标所在的行 / 列；坐标逐格标注时，以坐标指出的范围为准
       if (ctx.ocr) {
+        // 0) 网格检测标出的「疑似坐标栏」（外圈底色一致、几乎每格有字，只是字形对比分不开）：逐格读一遍，
+        //    是一串连续的数字就剥掉，并记为已剥掉的坐标栏（下面按坐标定范围时不再往这一侧扩）
+        for (int side = 0; side < 4; ++side) {
+          if (!pr.grid.header_candidate[side] || pr.xs.size() < 5 || pr.ys.size() < 5) continue;
+          const bool row = side < 2;
+          const auto& along = row ? pr.xs : pr.ys;
+          const auto& across = row ? pr.ys : pr.xs;
+          const double a0 = side % 2 == 0 ? across[0] : across[across.size() - 2];
+          const double a1 = side % 2 == 0 ? across[1] : across.back();
+          std::vector<cv::Rect> boxes;
+          for (size_t k = 1; k + 2 < along.size(); ++k) {  // 不含两个角
+            const double b0 = along[k], b1 = along[k + 1];
+            const double mx = 0.1 * (row ? b1 - b0 : a1 - a0), my = 0.1 * (row ? a1 - a0 : b1 - b0);
+            const double x0 = row ? b0 : a0, x1 = row ? b1 : a1, y0 = row ? a0 : b0, y1 = row ? a1 : b1;
+            boxes.push_back(cv::Rect(cv::Point(static_cast<int>(x0 + mx), static_cast<int>(y0 + my)),
+                                     cv::Point(static_cast<int>(x1 - mx), static_cast<int>(y1 - my))) &
+                            cv::Rect(0, 0, grays[i].cols, grays[i].rows));
+          }
+          std::string why;
+          const bool run = is_number_run(*ctx.ocr, grays[i], boxes, &why);
+          if (g_debug) debug["grid"][i]["number_band"][side] = why + (run ? " → 剥掉" : "");
+          if (!run) continue;
+          auto& v = row ? pr.ys : pr.xs;
+          if (side % 2 == 0) {
+            v.erase(v.begin());
+          } else {
+            v.pop_back();
+          }
+          pr.grid.header_stripped[side] = true;
+        }
         const auto& lx = pr.grid.lattice_x;
         const auto& ly = pr.grid.lattice_y;
         int c0 = static_cast<int>(std::find(lx.begin(), lx.end(), pr.xs.front()) - lx.begin());
@@ -259,26 +325,30 @@ ojson recognize(const Context& ctx, const RecognizeRequest& req, const Progress&
           while (c1 > c0 + 1 && majority(cr.label_cols, c0)) ++c0;
           // 2) 坐标逐格标注、读到的够多：范围以坐标为准（只在和现有范围大体一致时采用，防止读错）
           // 坐标说网格更大：扩展；坐标说网格更小：只有被去掉的那一列 / 行在坐标带里根本没有字时才缩
-          // （有字但没读出来，多半是 OCR 漏读了最后一个坐标）
-          auto adopt = [](const CoordFit& f, int& a, int& b, int n_lines, const std::vector<int>& has_word) {
+          // （有字但没读出来，多半是 OCR 漏读了最后一个坐标）。
+          // 网格检测已经把那一侧当坐标栏剥掉了的，不再往那一侧扩：坐标栏拐角处的数字（比如下方列坐标的第一个「30」
+          // 正好落在左侧行坐标那一列）会被当成多一行的行坐标
+          auto adopt = [](const CoordFit& f, int& a, int& b, int n_lines, const std::vector<int>& has_word, bool lock_a,
+                          bool lock_b) {
             if (!f.ok || !f.dense || f.support < 5) return;
             const int na = std::max(0, f.first), nb = std::min(n_lines - 2, f.last);
             const int overlap = std::min(b, nb) - std::max(a, na) + 1;
             if (nb <= na || overlap < 0.8 * (b - a + 1)) return;
             auto worded = [&](int idx) { return std::find(has_word.begin(), has_word.end(), idx) != has_word.end(); };
             if (na < a) {
-              a = na;
+              if (!lock_a) a = na;
             } else {
               while (a < na && !worded(a)) ++a;
             }
             if (nb > b) {
-              b = nb;
+              if (!lock_b) b = nb;
             } else {
               while (b > nb && !worded(b)) --b;
             }
           };
-          adopt(cr.cols, c0, c1, static_cast<int>(lx.size()), cr.cols_with_word);
-          adopt(cr.rows, r0, r1, static_cast<int>(ly.size()), cr.rows_with_word);
+          const auto& hs = pr.grid.header_stripped;  // 上、下、左、右
+          adopt(cr.cols, c0, c1, static_cast<int>(lx.size()), cr.cols_with_word, hs[2], hs[3]);
+          adopt(cr.rows, r0, r1, static_cast<int>(ly.size()), cr.rows_with_word, hs[0], hs[1]);
           // 分页图拼接用：这一页第一列 / 第一行的坐标编号
           if (cr.cols.ok && c0 - cr.cols.k >= 0) pr.abs_col0 = c0 - cr.cols.k;
           if (cr.rows.ok && r0 - cr.rows.k >= 0) pr.abs_row0 = r0 - cr.rows.k;

@@ -184,6 +184,31 @@ TEST(Grid, HeaderRingIsStripped) {
   expect_exact(s);
 }
 
+// 坐标栏下面还夹着一条「缝」（到图例框之间：一条浅色横线，个别竖线伸下来，零星几格凑够三条边连进了网格）。
+// 判断坐标栏时看的最外一行要先去掉这条缝，否则底部坐标栏会留在网格里
+TEST(Grid, HeaderRingWithSparseGapBelow) {
+  Spec s;
+  s.cols = 12;
+  s.rows = 10;
+  s.pitch = 44;
+  s.header_ring = true;
+  s.bold5 = false;
+  s.legend = false;
+  s.margin = 60;
+  Truth t;
+  cv::Mat img = render(s, t);
+  auto X = [&](int i) { return static_cast<int>(std::floor(s.margin + i * s.pitch)); };
+  auto Y = [&](int j) { return static_cast<int>(std::floor(s.margin + j * s.pitch)); };
+  const int gr = s.rows + 2, gc = s.cols + 2;  // 含坐标栏
+  const int y_gap = Y(gr) + static_cast<int>(s.pitch * 0.8);
+  cv::line(img, {X(0), y_gap}, {X(gc), y_gap}, cv::Scalar(150, 150, 150), 1);
+  for (int i : {3, 4, 9}) cv::line(img, {X(i), Y(gr)}, {X(i), y_gap}, cv::Scalar(0, 0, 0), 1);
+  const auto j = run(img);
+  ASSERT_FALSE(j.contains("error")) << j.dump();
+  EXPECT_EQ(j["grid"]["cols"].get<int>(), s.cols);
+  EXPECT_EQ(j["grid"]["rows"].get<int>(), s.rows);
+}
+
 TEST(Grid, SmallCellsWithoutText) {
   Spec s;
   s.cols = 64;

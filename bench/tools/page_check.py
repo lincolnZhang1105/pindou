@@ -15,20 +15,27 @@ from pathlib import Path
 
 
 def align(gt: list[float], pr: list[float], tol: float) -> dict:
-    """把预测线按最近距离（< tol 像素）配到真值线上。返回首尾漏掉的格数、中间漏的、多出的线数。"""
+    """把预测线按最近距离（< tol 像素）配到真值线上。返回首尾漏掉的格数、中间漏的、多出的线数，
+    以及多出的线在网格外的哪一侧（before / after，单位：格）。"""
     matched = []
     used = set()
+    extra_pos = []
     for x in pr:
         j = min(range(len(gt)), key=lambda k: abs(gt[k] - x))
         if abs(gt[j] - x) <= tol and j not in used:
             used.add(j)
             matched.append(j)
+        else:
+            extra_pos.append(x)
     extra = len(pr) - len(matched)
+    pitch = (gt[-1] - gt[0]) / max(1, len(gt) - 1)
+    sides = {"before": sum(x < gt[0] - tol for x in extra_pos), "after": sum(x > gt[-1] + tol for x in extra_pos)}
     if not matched:
-        return {"lead": None, "trail": None, "inner_missing": None, "extra": extra}
+        return {"lead": None, "trail": None, "inner_missing": None, "extra": extra, "sides": sides}
     lo, hi = min(matched), max(matched)
     inner = sum(1 for k in range(lo, hi + 1) if k not in used)
-    return {"lead": lo, "trail": len(gt) - 1 - hi, "inner_missing": inner, "extra": extra}
+    return {"lead": lo, "trail": len(gt) - 1 - hi, "inner_missing": inner, "extra": extra, "sides": sides,
+            "extra_at": [round((x - gt[0]) / pitch, 1) for x in extra_pos]}
 
 
 def check_unit(label: dict, pred: dict) -> list[dict]:
@@ -66,7 +73,9 @@ def describe(a: dict | None) -> str:
     if a["inner_missing"]:
         parts.append(f"中-{a['inner_missing']}")
     if a["extra"]:
-        parts.append(f"多{a['extra']}")
+        sd = a.get("sides", {})
+        where = "".join(f"{k}{v}" for k, v in (("前", sd.get("before", 0)), ("后", sd.get("after", 0))) if v)
+        parts.append(f"多{a['extra']}" + (f"({where})" if where else ""))
     return " ".join(parts) or "ok"
 
 
@@ -75,12 +84,13 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--data", required=True)
     ap.add_argument("--run", required=True)
     ap.add_argument("--only-bad", action="store_true")
+    ap.add_argument("--all", action="store_true", help="单页图纸也检查（默认只看分页图）")
     a = ap.parse_args(argv)
     root = Path(a.data)
     stats: Counter = Counter()
     for lp in sorted((root / "labels").glob("*.json")):
         label = json.loads(lp.read_text(encoding="utf-8"))
-        if len(label["pages"]) < 2:
+        if len(label["pages"]) < 2 and not a.all:
             continue
         pp = root / "preds" / a.run / lp.name
         pred = json.loads(pp.read_text(encoding="utf-8")) if pp.exists() else {"error": {"code": "missing"}}

@@ -109,8 +109,10 @@ double segment_strength(const cv::Mat& ridge, bool vertical, double line_pos, do
 
 // 判断网格最外一圈是不是坐标栏：底色一致、大多有字、而且相邻格的字形各不相同（数字 1、2、3……）。
 // 图纸本身的一圈不可能满足：底色相同就是同一个色号，字形也会相同。
+// band_like：底色一致、几乎每格有字这两条满足（不管字形对比的结果）
 bool is_header_line(const cv::Mat& rgb, const cv::Mat& gray, const std::vector<CellRect>& cells,
-                    std::string* why = nullptr) {
+                    std::string* why = nullptr, bool* band_like = nullptr) {
+  if (band_like) *band_like = false;
   if (cells.size() < 3) return false;
   std::vector<CellSample> ss;
   ss.reserve(cells.size());
@@ -130,15 +132,24 @@ bool is_header_line(const cv::Mat& rgb, const cv::Mat& gray, const std::vector<C
   const double n = static_cast<double>(ss.size());
   if (why) *why = "n=" + std::to_string(ss.size()) + " uniform=" + std::to_string(uniform) + " texted=" + std::to_string(texted);
   if (uniform < 0.85 * n || texted < 0.6 * n) return false;
+  if (band_like) *band_like = true;
   // 同一个色号连成一圈时，相邻格的字形几乎一模一样；坐标数字相邻两个总是不同（10 和 11 虽然共用一个「1」，
   // 整体也不相同）。所以看「几乎相同」的相邻对占多少，而不是看平均相似度。
   int pairs = 0, same = 0;
+  std::vector<double> sims;
   for (size_t i = 0; i + 1 < cells.size(); ++i) {
     if (!ss[i].has_text || !ss[i + 1].has_text) continue;
     ++pairs;
-    same += glyph_similarity(text_glyph(gray, cells[i], ss[i]), text_glyph(gray, cells[i + 1], ss[i + 1])) > 0.9;
+    const double sim = glyph_similarity(text_glyph(gray, cells[i], ss[i]), text_glyph(gray, cells[i + 1], ss[i + 1]));
+    sims.push_back(sim);
+    same += sim > 0.9;
   }
-  if (why) *why += " pairs=" + std::to_string(pairs) + " same=" + std::to_string(same);
+  if (why) {
+    std::sort(sims.begin(), sims.end());
+    auto q = [&](double f) { return sims.empty() ? 0.0 : sims[static_cast<size_t>(f * (sims.size() - 1))]; };
+    *why += " pairs=" + std::to_string(pairs) + " same=" + std::to_string(same) + " sim_q25/50/75=" +
+            std::to_string(q(0.25)).substr(0, 4) + "/" + std::to_string(q(0.5)).substr(0, 4) + "/" + std::to_string(q(0.75)).substr(0, 4);
+  }
   return pairs > 0 && same < 0.3 * pairs;
 }
 
@@ -717,28 +728,69 @@ GridResult detect_grid(const cv::Mat& rgb, const cv::Mat& gray, const Progress& 
     for (int j = j0 + 1; j < j1 - 1; ++j) v.push_back(cell(i, j));
     return v;
   };
-  // 每边最多剥两圈（有的样式在格子外还有一行带框的坐标）
+  // 一行 / 一列里四边（至少三边）框住的格子占多少
+  auto row_fill = [&](int j) {
+    int f = 0;
+    for (int i = i0; i < i1; ++i) f += framed[j * cx + i];
+    return double(f) / std::max(1, i1 - i0);
+  };
+  auto col_fill = [&](int i) {
+    int f = 0;
+    for (int j = j0; j < j1; ++j) f += framed[j * cx + i];
+    return double(f) / std::max(1, j1 - j0);
+  };
+  // 主块外沿多连进来的一条「缝」：坐标栏或网格最后一行之外、到图例框 / 装饰边框之间那一行，格线断断续续，
+  // 个别格子凑够三条边就连进了主块。特征是框住的格子不到 15%、而紧挨着的里面一行几乎全框住（≥ 80%）。
+  // 图纸自己的空白边行格线很淡时框住的也少，但那是一片逐渐变淡的区域，里面一行通常也框不全（合成集 eval60 #34）
+  for (int pass = 0; pass < 2; ++pass) {
+    bool any = false;
+    if (j1 - j0 >= 4 && row_fill(j0) < 0.15 && row_fill(j0 + 1) >= 0.8) ++j0, any = true;
+    if (j1 - j0 >= 4 && row_fill(j1 - 1) < 0.15 && row_fill(j1 - 2) >= 0.8) --j1, any = true;
+    if (i1 - i0 >= 4 && col_fill(i0) < 0.15 && col_fill(i0 + 1) >= 0.8) ++i0, any = true;
+    if (i1 - i0 >= 4 && col_fill(i1 - 1) < 0.15 && col_fill(i1 - 2) >= 0.8) --i1, any = true;
+    if (!any) break;
+    g.header_debug.push_back("trimmed sparse edge");
+  }
+  // 每边最多剥两圈（有的样式在格子外还有一行带框的坐标）。
+  // 坐标栏外面有时还夹着一条只有零星几格框住的缝（比如坐标栏和下方图例框之间：格线断断续续，个别格子凑够三条边
+  // 就连进了主块）：最外一行不是坐标栏、框住的格子不到一半、而紧挨着的里面一行是坐标栏时，两行一起剥掉。
+  // 只有里面是坐标栏才剥：空白区格线很淡时，图纸自己的边行也可能框住的格子不到一半
   for (int pass = 0; pass < 2; ++pass) {
     if (i1 - i0 < 3 || j1 - j0 < 3) break;
     std::string w[4];
-    const bool top = is_header_line(rgb, gray, row_cells(j0), &w[0]);
-    const bool bottom = is_header_line(rgb, gray, row_cells(j1 - 1), &w[1]);
-    const bool left = is_header_line(rgb, gray, col_cells(i0), &w[2]);
-    const bool right = is_header_line(rgb, gray, col_cells(i1 - 1), &w[3]);
+    auto side = [&](int k, bool row, int inward, std::string* why) {
+      if (is_header_line(rgb, gray, row ? row_cells(k) : col_cells(k), why)) return 1;
+      const int lim = row ? j1 - j0 : i1 - i0;
+      if (lim < 4 || (row ? row_fill(k) : col_fill(k)) >= 0.5) return 0;
+      std::string inner;
+      if (!is_header_line(rgb, gray, row ? row_cells(k + inward) : col_cells(k + inward), &inner)) return 0;
+      if (why) *why += " | 外面是缝，里面一行：" + inner;
+      return 2;
+    };
+    const int top = side(j0, true, +1, &w[0]);
+    const int bottom = side(j1 - 1, true, -1, &w[1]);
+    const int left = side(i0, false, +1, &w[2]);
+    const int right = side(i1 - 1, false, -1, &w[3]);
     for (const auto& x : w) g.header_debug.push_back(x);
-    g.header_stripped[0] |= top;
-    g.header_stripped[1] |= bottom;
-    g.header_stripped[2] |= left;
-    g.header_stripped[3] |= right;
-    if (top) ++j0;
-    if (bottom) --j1;
-    if (left) ++i0;
-    if (right) --i1;
+    g.header_stripped[0] |= top > 0;
+    g.header_stripped[1] |= bottom > 0;
+    g.header_stripped[2] |= left > 0;
+    g.header_stripped[3] |= right > 0;
+    j0 += top;
+    j1 -= bottom;
+    i0 += left;
+    i1 -= right;
     if (!(top || bottom || left || right)) break;
   }
   if (i1 - i0 < 1 || j1 - j0 < 1) {
     g.fail_reason = "去掉坐标栏后没有格子";
     return g;
+  }
+  if (i1 - i0 >= 3 && j1 - j0 >= 3) {
+    is_header_line(rgb, gray, row_cells(j0), nullptr, &g.header_candidate[0]);
+    is_header_line(rgb, gray, row_cells(j1 - 1), nullptr, &g.header_candidate[1]);
+    is_header_line(rgb, gray, col_cells(i0), nullptr, &g.header_candidate[2]);
+    is_header_line(rgb, gray, col_cells(i1 - 1), nullptr, &g.header_candidate[3]);
   }
 
   g.xs.assign(g.lattice_x.begin() + i0, g.lattice_x.begin() + i1 + 1);
