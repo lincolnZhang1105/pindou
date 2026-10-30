@@ -129,6 +129,8 @@ PYTHONUTF8=1 .venv/Scripts/python -m bench.tools.synth_compare --data bench/synt
 - `bench.tools.page_check`：逐页列出网格少了或多了哪一行、哪一列，在网格哪一侧，拼接偏移对不对；加 `--all` 也检查单页图；
 - `bench.tools.partition_check`：只看格子分组对不对，不看色号。
 
+**给人试用**（没有 App，这是桌面上的试用入口）：把图纸图片拖到 `tools/try.cmd` 上，或者运行 `python tools/try_recognize.py 图片... [--hint MARD-221]`。它会跑识别，把结果整理成网页 `build/try/<时间>/index.html` 并打开，内容有网格尺寸、判断的品牌、按识别结果重画的图纸、用量清单（和图例颗数逐项对照）、网格叠加图和警告。
+
 单张图调试用 CLI 的 `--debug`，会输出每页的 lattice、border_map、坐标栏判断依据、坐标读取、B9 版式选择等：
 
 ```bash
