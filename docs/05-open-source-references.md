@@ -129,6 +129,11 @@
 | bench 离线依赖：numpy、pillow、pyyaml、scipy、opencv-python-headless、colour-science、pytest | 见 `bench/requirements.txt` | BSD / MIT / HPND / Apache-2.0 | bench/、training/（不打包） | 2026-10-27 | 不分发 |
 | T0.8 Pindo baseline 的 npm 依赖：esbuild、@napi-rs/canvas（内含 Skia，BSD-3-Clause） | 0.28.2、1.0.13 | MIT | **只在** bench/competitors/pindo（装在 gitignore 的 `node_modules/`，不打包） | 2026-10-28 | 不分发 |
 | LunarXuan/Pindo 源码 @4ae36138（**红线项目，只作外部进程运行**） | — | GPL-3.0 | **只在** bench/competitors/pindo：按锁文件下载到 gitignore 的 `.work/`，不修改、不复制、不分发；仓库里只有自己写的胶水代码 | 2026-10-28 | 不分发，无需履行；不得进入 app/、core/、palettes/、backend/ |
+| Flutter SDK（框架和引擎） | 3.47.9 stable | BSD-3-Clause（引擎含 Skia 等，见 Flutter 的 LICENSE 汇总） | app（安卓原型，07「例外：安卓原型」） | 2026-10-31 | 待做：正式版的「开源许可」页用 Flutter 自带的 LicenseRegistry 汇总展示（阶段 1） |
+| Dart 包 ffi | ^2.2.0 | BSD-3-Clause | app：调用 libbeadcore.so | 2026-10-31 | 同上 |
+| Dart 包 path_provider | ^2.1.6 | BSD-3-Clause（间接引入 dart-lang/native 的 jni 包，BSD-3-Clause，带 libdartjni.so） | app：App 私有目录 | 2026-10-31 | 同上 |
+| Dart 包 image_picker | ^1.2.4 | BSD-3-Clause（pub.dev 另标 Apache-2.0） | app：系统图片选择器（Android 13 起是 Photo Picker，不申请相册权限） | 2026-10-31 | 同上；上线前读各平台实现包的 LICENSE 原文核实 |
+| ONNX Runtime Android 官方包里的 libonnxruntime.so | 1.31.1 | MIT | app（**只限原型**）：官方完整版，34 MB | 2026-10-31 | 正式版必须换成 `--no_telemetry`、只含所需算子的精简构建（03 §1） |
 | wakelock_plus、flutter_local_notifications、drift、riverpod、pdf、sentry_flutter、fluwx（微信支付）、支付宝插件 | 待定 | **引入时读 LICENSE 原文核实** | app | | |
 | zwhy149/bead-grid-studio（移植进 `core/src/quant`） | 待定 | Apache-2.0 | core | | 保留 LICENSE 和 NOTICE、标注改动、不使用其名称和 logo |
 

@@ -1,0 +1,29 @@
+name: pindou_app
+description: 豆伴安卓原型（07「例外：安卓原型」）。只装在 PO 手机上试用，不上架、不外发。
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.11.0 <4.0.0"
+  flutter: ">=3.41.0"
+
+# 新增依赖要登记到 docs/05 §6
+dependencies:
+  flutter:
+    sdk: flutter
+  ffi: ^2.2.0             # BSD-3-Clause：调用 libbeadcore.so 的 C ABI
+  path_provider: ^2.1.6   # BSD-3-Clause：App 私有目录（模型解压、测试色卡）
+  image_picker: ^1.2.4    # BSD-3-Clause / Apache-2.0：系统图片选择器，不申请相册权限
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  # 由 tools/build-app.sh 从 core/models、palettes/build、build/ 拷进来（不进 git）
+  assets:
+    - assets/models/
+    - assets/palettes.json
+    - assets/bench_104.png

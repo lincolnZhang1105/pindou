@@ -20,7 +20,8 @@
 - **阶段 0（当前）**：先证明识别做得比最强的竞品好，再决定要不要入场。
   - 产出是 C++ 识别核心 `beadcore` 和一整套 benchmark 工具。
   - 阶段 0 结束时有 **go/no-go 关口**（04 §0）。**no-go 就停下，不写 App**。
-- **App 代码一行都还没写**：阶段 1 必须等 go 之后才能开始。
+- **正式 App 还没开始写**：阶段 1 必须等 go 之后才能开始。
+- **例外**：PO 2026-10-31 决定先做一个安卓原型（`app/`），只装在 PO 自己的手机上试识别效果，见第 4.1 节和 07「例外：安卓原型」。
 
 ## 2. 做到了哪里
 
@@ -137,6 +138,24 @@ PYTHONUTF8=1 .venv/Scripts/python -m bench.tools.synth_compare --data bench/synt
 build/win/beadcore-cli.exe recognize IMG... --debug --models core/models --palettes bench/palettes_unverified/build/palettes_bench.json --hint MARD-221
 ```
 
+### 4.1 安卓原型（`app/`）
+
+- **编译和安装**：
+  1. 在 WSL 里编识别库：`tools/build-android.sh`；
+  2. 在 Git Bash 里打包：`tools/build-app.sh`，产物是 `app/build/app/outputs/flutter-apk/app-release.apk`，只含 arm64；
+  3. 装机：`adb install -r ...`；
+  4. 测 MARD 等国内品牌图纸前：`tools/app-push-palettes.sh`。
+- **在电脑上测**：
+  - 本机有 Android 16 的 x86_64 模拟器（`Medium_Phone_API_36.1`），可以用 `-no-window` 无窗口启动；
+  - **arm64 识别库在模拟器的 ARM 转译下一加载 ONNX Runtime 就崩**（读 CPU 信息时空指针），这只是模拟器的问题；
+  - 所以要先 `ABI=x86_64 tools/build-android.sh`，再 `APP_ABIS="arm64-v8a x86_64" tools/build-app.sh` 打一个双架构的测试包；
+  - 用 `adb shell input tap` 和 `screencap` 就能走完导入、识别、高亮的全流程。
+- **Flutter SDK**：在仓库外的 `D:\AIworkspace\_tools\flutter`（3.47.9），已关闭匿名统计。
+- **Gradle 第一次构建**：
+  - 要装 NDK 28.2.13676358。新版 cmdline-tools 把 `sdkmanager` 换成了 Android CLI，自动安装会失败，需要手动下载 `android-ndk-r28c-windows.zip`，校验 sha1 后解压到 `Sdk/ndk/28.2.13676358`；
+  - 工程在 D 盘、pub 缓存在 C 盘，Kotlin 增量编译会报「Storage ... is already registered」，已在 `app/android/gradle.properties` 里关掉。
+- **色卡**：安装包里只有 12 套国际色卡，识别 MARD 图纸时品牌会显示「未确定」，色号写法也可能被改。推送测试色卡后才正常。
+
 ## 5. 环境的坑（都踩过）
 
 - **Python**：
@@ -153,6 +172,8 @@ build/win/beadcore-cli.exe recognize IMG... --debug --models core/models --palet
   - **不要改用户的全局配置**。Python 的 urllib 直连可用。
 - **编译时文件被占用**：`beadcore-cli.exe` 正在被评测调用时重新编译会链接失败，等评测跑完再编译。
 - **跑得慢的命令放后台**：两个合成集各跑一遍识别加评测，通常要 2–10 分钟。
+- **两个 adb**：PATH 里的是 `C:\soft\platform-tools\adb.exe`，另一个在 Android SDK 里。Flutter 会提示冲突，统一用 SDK 里的那个。
+- **ONNX Runtime 的 `Ort::Env` 故意不析构**：退出时 ORT 自己的静态对象可能已先析构，在 Android 的 bionic 上会因为锁了一把已销毁的互斥锁而中止进程（`core/src/nn/model.cpp`）。
 
 ## 6. 工作纪律（AGENTS 之外，和 PO 约定过的）
 

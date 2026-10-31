@@ -69,7 +69,13 @@
         "android-arm64-v8a": {
           "url": "https://repo1.maven.org/maven2/com/microsoft/onnxruntime/onnxruntime-android/1.31.1/onnxruntime-android-1.31.1.aar",
           "sha256": "d4d50660300ed2c4f38ffdfd5ab5bfa3a22f995f282dda24f42ea3ea55467b49",
-          "note": "官方 Android 包（默认带遥测），只用于 T0.14 真机测速；App 必须换成 --no_telemetry 的定制构建",
+          "note": "官方 Android 包（默认带遥测），只用于 T0.14 真机测速和安卓原型；正式 App 必须换成 --no_telemetry 的定制构建",
+          "version": "1.31.1"
+        },
+        "android-x86_64": {
+          "url": "https://repo1.maven.org/maven2/com/microsoft/onnxruntime/onnxruntime-android/1.31.1/onnxruntime-android-1.31.1.aar",
+          "sha256": "d4d50660300ed2c4f38ffdfd5ab5bfa3a22f995f282dda24f42ea3ea55467b49",
+          "note": "同一个官方 AAR 里的 x86_64 库：只用于在电脑上的安卓模拟器里测原型（arm64 库在模拟器的 ARM 转译下启动即崩）",
           "version": "1.31.1"
         }
       }

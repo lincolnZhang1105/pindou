@@ -115,6 +115,29 @@ function(bc_copy_runtime target)
 endfunction()
 target_compile_definitions(beadcore PRIVATE BC_VERSION_STRING="${PROJECT_VERSION}")
 
+# App 用的动态库（Android：libbeadcore.so，由 Dart FFI 加载，07「安卓原型」/ T1.1）。
+# 只导出 beadcore.h 里的 C ABI：自己的符号默认隐藏，静态链进来的 OpenCV 等符号也不导出
+option(BC_BUILD_SHARED "编译 App 用的动态库 libbeadcore" OFF)
+if(BC_BUILD_SHARED)
+  add_library(beadcore_shared SHARED ${BC_SOURCES})
+  set_target_properties(beadcore_shared PROPERTIES OUTPUT_NAME beadcore
+    CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON)
+  target_include_directories(beadcore_shared
+    PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src" "${BC_THIRD_PARTY_INCLUDE}")
+  target_compile_definitions(beadcore_shared PRIVATE BEADCORE_SHARED BEADCORE_BUILDING
+    BC_VERSION_STRING="${PROJECT_VERSION}")
+  target_link_libraries(beadcore_shared PRIVATE ${OpenCV_LIBS})
+  if(BC_WITH_ORT)
+    target_link_libraries(beadcore_shared PRIVATE bc_onnxruntime)
+    target_compile_definitions(beadcore_shared PRIVATE BC_HAVE_ORT=1)
+  endif()
+  if(ANDROID)
+    # Android 15 起原生库要按 16 KB 页对齐
+    target_link_options(beadcore_shared PRIVATE "-Wl,--exclude-libs,ALL" "-Wl,--gc-sections" "-Wl,-z,max-page-size=16384")
+  endif()
+endif()
+
 # 内部头文件给测试和 CLI 用（不对外）
 add_library(beadcore_internal INTERFACE)
 target_include_directories(beadcore_internal INTERFACE

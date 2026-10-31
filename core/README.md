@@ -45,6 +45,8 @@ tools/build-win.sh
 
 产物在 `build/win/`：`beadcore-cli.exe`、`beadcore_tests.exe`（`onnxruntime.dll` 会自动拷过去）。
 
+Android（在 Linux / WSL 上交叉编译）：`tools/build-android.sh`，产出真机测速用的 `beadcore-cli`，以及 App 用的 `libbeadcore.so`（CMake 选项 `BC_BUILD_SHARED=ON`，只导出 C ABI，按 16 KB 页对齐）。`ABI=x86_64` 编电脑上安卓模拟器用的版本。
+
 ## CLI
 
 ```bash

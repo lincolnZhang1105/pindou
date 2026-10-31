@@ -16,9 +16,11 @@ namespace bc::nn {
 
 namespace {
 
+// 全进程共用一个 Ort::Env，故意不在退出时析构：进程退出时 ORT 自己的静态对象（日志管理器的互斥锁等）
+// 可能已经先析构，再析构 Env 会锁一把已销毁的互斥锁，Android 的 bionic 会因此直接中止进程
 Ort::Env& env() {
   static std::once_flag once;
-  static std::unique_ptr<Ort::Env> e;
+  static Ort::Env* e = nullptr;
   std::call_once(once, [] {
     // 必须在 ORT 初始化之前设置，否则 1DS 上传器和设备标识已经创建
 #ifdef _WIN32
@@ -26,7 +28,7 @@ Ort::Env& env() {
 #else
     setenv("ORT_DISABLE_TELEMETRY", "1", 1);
 #endif
-    e = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING, "beadcore");
+    e = new Ort::Env(ORT_LOGGING_LEVEL_WARNING, "beadcore");
     e->DisableTelemetryEvents();
   });
   return *e;
